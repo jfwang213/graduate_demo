@@ -43,18 +43,14 @@ class transceiver(gr.top_block):
 
         #set up usrp source
         self._setup_usrp_source()
-        self._setup_usrp_sink()
+        #self._setup_usrp_sink()
 
-        # Set the USRP for maximum transmit gain
-        # (Note that on the RFX cards this is a nop.)
-        self.tx_subdev.set_gain((self.tx_subdev.gain_range()[0] + \
-            self.tx_subdev.gain_range()[1])/2)
 
         self.rx_path = receive_path(callback, options)
         self.connect(self.rx_u, self.rx_path)
 
-        self.tx_path = transmit_path(options)
-        self.connect(self.tx_path, self.tx_u)
+        #self.tx_path = transmit_path(options)
+        #self.connect(self.tx_path, self.tx_u)
 
     def _setup_usrp_sink(self):
         """
@@ -68,12 +64,13 @@ class transceiver(gr.top_block):
 
         # determine the daughterboard subdevice we're using
         if self._tx_subdev_spec is None:
+            print 'tx subdev not set'
             self._tx_subdev_spec = usrp.pick_tx_subdevice(self.tx_u)
         self.tx_u.set_mux(usrp.determine_tx_mux_value(self.tx_u, self._tx_subdev_spec))
         self.tx_subdev = usrp.selected_subdev(self.tx_u, self._tx_subdev_spec)
 
         # Set center frequency of USRP
-        ok = self.tx_u.tune(0, self.tx_subdev, self._tx_freq)
+        ok = self.tx_u.tune(1, self.tx_subdev, self._tx_freq)
         if not ok:
             print "Failed to set Tx frequency to %s" % (eng_notation.num_to_str(self._tx_freq),)
             raise ValueError
@@ -93,10 +90,16 @@ class transceiver(gr.top_block):
 
         # determine the daughterboard subdevice we're using
         if self._rx_subdev_spec is None:
+            print 'not set rx subdev'
             self._rx_subdev_spec = usrp.pick_rx_subdevice(self.rx_u)
+        print self._rx_subdev_spec
         self.rx_subdev = usrp.selected_subdev(self.rx_u, self._rx_subdev_spec)
 
+        gains = self.rx_subdev.gain_range()
+        self.rx_subdev.set_gain((gains[0]+gains[1])/2)
+
         self.rx_u.set_mux(usrp.determine_rx_mux_value(self.rx_u, self._rx_subdev_spec))
+        print 'subdev size %d' % self.rx_subdev.which()
         ok = self.rx_u.tune(0, self.rx_subdev, self._rx_freq)
         if not ok:
             print "Failed to set Rx frequency to %s" % (eng_notation.num_to_str(self._rx_freq),)
@@ -104,6 +107,8 @@ class transceiver(gr.top_block):
 
         self.rx_subdev.set_auto_tr(True)
         
+    def send_pkt(self, payload='', eof=False):
+        return self.tx_path.send_pkt(payload, eof)
 
     def add_options(normal, expert):
         """

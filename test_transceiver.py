@@ -5,6 +5,9 @@ from optparse import OptionParser
 import struct, sys
 from transceiver import transceiver
 
+
+import time
+
 def main():
     global n_rcvd, n_right
         
@@ -45,6 +48,20 @@ def main():
         print "Warning: failed to enable realtime scheduling"
 
     tr.start()
+
+
+    #nbytes = int(1e6)
+    #n = 0
+    #pkt_size = 400
+    #pktno = 0
+    #while n < nbytes:
+    #    tr.send_pkt(struct.pack('!H', pktno) + (pkt_size - 2) * chr(pktno & 0xff))
+    #    pktno += 1
+    #    n += 1
+    #    if pktno % 5 == 0:
+    #        print '.',
+    #time.sleep(1000)
+    #send_pkt('',True)
     tr.wait()
 
 if __name__ == '__main__':
