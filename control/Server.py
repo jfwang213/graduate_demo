@@ -61,7 +61,7 @@ class Server:
         srcMac = struct.unpack('!B', commandContent[0:1])
         dstMac = struct.unpack('!B', commandContent[1:2])
         if dstMac != self.macAddr:
-            print 'not my package'
+            print 'not my package ', dstMac
             return
         commandType = struct.unpack('!B', commandContent[2:3])
         if commandType == Constants.FreqReq:
