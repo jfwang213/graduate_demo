@@ -60,14 +60,14 @@ class Client(object):
             ok, pktno, self.n_rcvd, self.n_right)
 
     def dealWithCommand(self, commandContent):
-        srcMac = struct.unpack('!B', commandContent[0:1])
-        dstMac = struct.unpack('!B', commandContent[1:2])
+        srcMac = struct.unpack('!B', commandContent[0:1])[0]
+        dstMac = struct.unpack('!B', commandContent[1:2])[0]
         if dstMac != self.macAddr:
             print 'not my package'
             return
-        commandType = struct.unpack('!B', commandContent[2:3])
+        commandType = struct.unpack('!B', commandContent[2:3])[0]
         if commandType == Constants.FreqAssign:
-            width = struct.unpack('!I', commandContent[3:7])
+            width = struct.unpack('!I', commandContent[3:7])[0]
             print 'get freqAssign width:', width
 
     def sendReqPackage(self, width):

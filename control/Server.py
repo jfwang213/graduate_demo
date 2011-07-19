@@ -58,14 +58,14 @@ class Server:
             ok, pktno, self.n_rcvd, self.n_right)
 
     def dealWithCommand(self, commandContent):
-        srcMac = struct.unpack('!B', commandContent[0:1])
-        dstMac = struct.unpack('!B', commandContent[1:2])
+        srcMac = struct.unpack('!B', commandContent[0:1])[0]
+        dstMac = struct.unpack('!B', commandContent[1:2])[0]
         if dstMac != self.macAddr:
             print 'not my package ', dstMac
             return
-        commandType = struct.unpack('!B', commandContent[2:3])
+        commandType = struct.unpack('!B', commandContent[2:3])[0]
         if commandType == Constants.FreqReq:
-            width = struct.unpack('!I', commandContent[3:7])
+            width = struct.unpack('!I', commandContent[3:7])[0]
             print 'get freqReq width:', width
             self.sendAssignPacket(srcMac, width, width/2)
 
