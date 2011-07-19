@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from Constants import Constants
+
 from gnuradio import gr, modulation_utils
 from gnuradio.eng_option import eng_option
 from optparse import OptionParser
@@ -10,9 +11,9 @@ import usrp_receive_path, usrp_transmit_path
 from transceiver import my_top_block
 import struct
 
-class Server:
+class Client(object):
     def __init__(self):
-        self.macAddr = 0
+        self.macAddr = 1
         args = ["-f", "2.4G", "-R", "B", "-T", "B"]
 
         demods = modulation_utils.type_1_demods()
@@ -46,8 +47,9 @@ class Server:
         self.n_rcvd = 0
         self.n_right = 0
         self.pkt_no = 0
+        self.reqId = 0
 
-        print "server init ok!"
+        print "client init ok!"
     def callback(self, ok, payload):
         (pktno,) = struct.unpack('!H', payload[0:2])
         self.n_rcvd += 1
@@ -64,16 +66,16 @@ class Server:
             print 'not my package'
             return
         commandType = struct.unpack('!B', commandContent[2:3])
-        if commandType == Constants.FreqReq:
+        if commandType == Constants.FreqAssign:
             width = struct.unpack('!I', commandContent[3:7])
-            print 'get freqReq width:', width
-            self.sendAssignPacket(srcMac, width, width/2)
+            print 'get freqAssign width:', width
 
-    def sendAssignPacket(self, dstMac, width, midFreq):
+    def sendReqPackage(self, width):
         payload = ''
-        payload += struct.pack('!BBB', self.macAddr, dstMac, Constants.FreqAssign)
-        payload += struct.pack('!II', width, midFreq)
+        payload += struct.pack('!BBB', self.macAddr, 0, Constants.FreqReq)
+        payload += struct.pack('!II', width, self.reqId)
         self.send_pkt(payload)
+        self.reqId += 1
 
     def send_pkt(self, payload='', eof=False):
         self.pkt_no += 1
@@ -85,11 +87,18 @@ class Server:
 
 
 if __name__ == '__main__':
-    server = Server()
-    content = raw_input("say something!\n")
+    client = Client()
+    content = raw_input("input command!\n")
     while content != 'E':
-        server.send_pkt(content)
-        print content
+        if content[0:1] == 'R':
+            try:
+                width = int(content[2:])
+            except ValueError as e:
+                width = None
+            if width != None:
+                client.sendReqPackage(width)
+            else:
+                print 'invalid number'
         content = raw_input()
     server.send_pkt('', True)
     print 'send end!'
