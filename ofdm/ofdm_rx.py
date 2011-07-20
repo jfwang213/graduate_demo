@@ -45,7 +45,8 @@ class ofdm_rx(object):
             print 'Warning: failed to enable realtime scheduling'
 
         self.tb.start()
-
+        self.n_rcvd = 0
+        self.n_right = 0
         
         print 'rx init ok!'
     

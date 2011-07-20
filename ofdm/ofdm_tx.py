@@ -46,7 +46,7 @@ class ofdm_tx(object):
 
         self.tb.start()
 
-        print 'server init ok!'
+        print 'tx init ok!'
 
     def send_pkt(self, payload='', eof=False):
         self.tb.txpath.send_pkt(payload, eof)
