@@ -12,11 +12,14 @@ from benchmark_ofdm_rx import my_top_block
 import struct
 
 class ofdm_rx(object):
-    def __init__(self, midFreq, fft_len, occupied_len, cp_len):
+    def __init__(self, midFreq, fft_len, occupied_len, cp_len, callback = None):
         if midFreq == None or fft_len == None or \
             occupied_len == None or cp_len == None:
             print 'param is not ok!'
             return
+
+        if callback == None:
+            callback = self.rx_callback
         args = ['-d', '64', '-R', 'B']        
         args.append('-f')
         args.append(str(midFreq))
@@ -38,13 +41,12 @@ class ofdm_rx(object):
 
         (options, args) = parser.parse_args (args)
         
-        self.tb = my_top_block(self.rx_callback, options)
+        self.tb = my_top_block(callback, options)
 
         r = gr.enable_realtime_scheduling()
         if r != gr.RT_OK:
             print 'Warning: failed to enable realtime scheduling'
 
-        self.tb.start()
         self.n_rcvd = 0
         self.n_right = 0
         
@@ -59,8 +61,9 @@ class ofdm_rx(object):
     
     def wait(self):
         self.tb.wait()
-
+    def start(self):
+        self.tb.start()
 if __name__ == '__main__':
     tx = ofdm_rx('2.4G', 128, 80, 32)
-
+    tx.start()
     tx.wait()

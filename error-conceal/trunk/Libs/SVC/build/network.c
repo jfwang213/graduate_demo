@@ -71,6 +71,7 @@ int network_init()
 		printf("accept error!\n");
 		return 0;
 	}
+    printf("accept one client!\n");
 	return 1;
 }
 

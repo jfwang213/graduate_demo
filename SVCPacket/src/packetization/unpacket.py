@@ -1,7 +1,6 @@
 import struct,threading
-from utils import log
+from SVCPacket.src.utils import log
 from rtp_utils import get_rtp_header_len,check_rtp_fu_as,get_seq_num,get_fu_a_header
-from utils import log
 from nal_utils import get_nal_type
 import pdb
 class unpacket:
