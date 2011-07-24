@@ -182,7 +182,7 @@ int main(int argc, char* argv[]) { /* for link with C runtime boot */
 		}
 		logStr("accessid:%d\n",accessId);
 		assign_flag_to_access_unit(current_access_unit);
-		before_decoder_au(pdecoder_context,pdisplay_context);
+		before_decoder_au(pdecoder_context, pdisplay_context);
 		while (next_nal = get_next_nal(current_access_unit,NULL))
 		{
 			if (is_vcl_nal(next_nal))

@@ -4,28 +4,46 @@
 #include "stdio.h"
 #ifdef WIN32
 #include <winsock2.h>
+#else
+#include <sys/socket.h>
+#include <netinet/in.h>
+#endif
 
+#ifdef WIN32
 SOCKET server_socket;
-struct sockaddr_in server_addr;
 SOCKET receive_socket;
+#else
+int server_socket;
+int receive_socket;
+#endif
+
 struct sockaddr_in client_addr;
+struct sockaddr_in server_addr;
 static int nal_num = 0;
 int network_init()
 {
+#ifdef WIN32
 	WSADATA  Ws;
+#endif
 	int ret;
 	int addrLen  = sizeof(client_addr);
 	server_addr.sin_family = AF_INET;
 	server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
 	server_addr.sin_port = htons(12345);
 	memset(server_addr.sin_zero, 0x00, 8);
+#ifdef WIN32
 	if ( WSAStartup(MAKEWORD(2,2), &Ws) != 0 )
 	{
 		printf("Init Windows Socket Failed::%d\n",GetLastError());
 		return 0;
 	}
+#endif
 	server_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+#ifdef WIN32
 	if (INVALID_SOCKET == server_socket)
+#else
+    if (-1 == server_socket)
+#endif
 	{
 		printf("socket create error\n");
 		return 0;
@@ -44,7 +62,11 @@ int network_init()
 	}
 	printf("waiting for client socket!\n");
 	receive_socket = accept(server_socket,(struct sockaddr*)&client_addr,&addrLen);
+#ifdef WIN32
 	if (INVALID_SOCKET == receive_socket)
+#else
+    if (-1 == receive_socket)
+#endif
 	{
 		printf("accept error!\n");
 		return 0;
@@ -54,11 +76,19 @@ int network_init()
 
 void network_close()
 {
+#ifdef WIN32
 	closesocket(receive_socket);
 	closesocket(server_socket);
+#else
+    close(receive_socket);
+    close(server_socket);
+#endif
 }
-
-int recv_fix_len(SOCKET s,int len,unsigned char *buf)
+#ifdef WIN32
+int recv_fix_len(SOCKET s, int len, unsigned char *buf)
+#else
+int recv_fix_len(int s, int len, unsigned char *buf)
+#endif
 {
 	int now = 0;
 	int try_num = 0;
@@ -94,4 +124,3 @@ NAL* get_one_nal_from_network(decoder_context *pdecoder_context)
 	return res;
 }
 
-#endif
