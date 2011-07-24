@@ -240,7 +240,7 @@ int main(int argc, char* argv[]) { /* for link with C runtime boot */
 				log_slice_info(current_nal,pdecoder_context,pthread_context);
 			}
 			//log
-			if (current_nal->bFinishAccessUnit)
+			if (current_nal->bFinishAccessUnit && is_vcl_nal(current_nal))
 			{
 				log_memory_state(current_nal,pdecoder_context->mmo);
 			}
