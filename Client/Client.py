@@ -24,7 +24,7 @@ class Client:
         self.ofdm_rx.wait() 
         print 'init client ok!'
     def startSVCPlayer(self):
-        filePath = '../error-conceal/trunk/Libs/SVC/bin/svc'
+        filePath = '../error-conceal/Libs/SVC/bin/svc'
         svcProcess = subprocess.Popen([filePath, '-network', '-layer', '16'])
 
 

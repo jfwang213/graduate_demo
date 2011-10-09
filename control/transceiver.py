@@ -33,7 +33,6 @@ def main():
     def send_pkt(payload='', eof=False):
         return tb.txpath.send_pkt(payload, eof)
 
-    
     global n_rcvd, n_right
 
     n_rcvd = 0

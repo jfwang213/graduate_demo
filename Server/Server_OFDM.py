@@ -20,6 +20,7 @@ class ServerData:
             pktno += 1
             self.tx.send_pkt(one_packet)
             one_packet = self.pack.get_one_packet()
+
         self.tx.send_pkt(eof=True)
 
 
