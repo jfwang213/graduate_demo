@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 import sys
 sys.path.append('..')
+from datetime import datetime
 
 from SVCPacket.src.packetization import packet
 from ofdm import ofdm_tx
 class ServerData:
     def __init__(self):
         self.fileName = '/root/gnuradio/graduate_demo/Server/svc.file'
+        print datetime.now()
         print self.fileName
         self.pack = packet.packet(self.fileName, 400, 177)
         self.tx = ofdm_tx.ofdm_tx('2.4G', 128, 80, 32)
@@ -22,6 +24,7 @@ class ServerData:
             one_packet = self.pack.get_one_packet()
 
         self.tx.send_pkt(eof=True)
+        print datetime.now()
 
 
 
