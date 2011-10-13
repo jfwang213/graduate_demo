@@ -12,7 +12,7 @@ from benchmark_ofdm_rx import my_top_block
 import struct
 
 class ofdm_rx(object):
-    def __init__(self, midFreq, fft_len, occupied_len, cp_len, callback = None):
+    def __init__(self, midFreq, fft_len, occupied_len, cp_len, dinter, callback = None):
         if midFreq == None or fft_len == None or \
             occupied_len == None or cp_len == None:
             print 'param is not ok!'
@@ -20,7 +20,7 @@ class ofdm_rx(object):
 
         if callback == None:
             callback = self.rx_callback
-        args = ['-d', '64', '-R', 'B']        
+        args = ['-d', str(dinter), '-R', 'B']        
         args.append('-f')
         args.append(str(midFreq))
         args.append('--fft-length')

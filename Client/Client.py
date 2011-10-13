@@ -44,7 +44,7 @@ class Client:
             print pktno
         
     def initOfdmRx(self):
-        self.ofdm_rx = ofdm_rx('2.4G', 128, 80, 32, self.rxCallBack)
+        self.ofdm_rx = ofdm_rx('2.4G', 128, 80, 32, 32, self.rxCallBack)
 
     def feedPlayer(self):
         while True:
