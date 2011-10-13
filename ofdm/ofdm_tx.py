@@ -12,12 +12,12 @@ from benchmark_ofdm_tx import my_top_block
 import struct
 
 class ofdm_tx(object):
-    def __init__(self, midFreq, fft_len, occupied_len, cp_len):
+    def __init__(self, midFreq, fft_len, occupied_len, cp_len, inter):
         if midFreq == None or fft_len == None or \
             occupied_len == None or cp_len == None:
             print 'param is not ok!'
             return
-        args = ['--tx-amplitude', '5000', '-i', '128', '-T', 'B']        
+        args = ['--tx-amplitude', '5000', '-i', str(inter), '-T', 'B']        
         args.append('-f')
         args.append(str(midFreq))
         args.append('--fft-length')
