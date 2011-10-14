@@ -20,6 +20,8 @@ int receive_socket;
 struct sockaddr_in client_addr;
 struct sockaddr_in server_addr;
 static int nal_num = 0;
+const char *serverIpAddress = "127.0.0.1";
+const short serverPortNumber = 12345;
 int network_init()
 {
 #ifdef WIN32
@@ -28,8 +30,8 @@ int network_init()
 	int ret;
 	int addrLen  = sizeof(client_addr);
 	server_addr.sin_family = AF_INET;
-	server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
-	server_addr.sin_port = htons(12345);
+	server_addr.sin_addr.s_addr = inet_addr(serverIpAddress);
+	server_addr.sin_port = htons(serverPortNumber);
 	memset(server_addr.sin_zero, 0x00, 8);
 #ifdef WIN32
 	if ( WSAStartup(MAKEWORD(2,2), &Ws) != 0 )

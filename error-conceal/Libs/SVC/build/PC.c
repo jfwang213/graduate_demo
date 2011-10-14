@@ -49,10 +49,6 @@
 #define image_type unsigned char
 #define dpb_type unsigned char
 
-
-
-
-
 #include "decoder_context.h"
 #include "mb_svc.h"
 #include "cal_time.h"
@@ -69,7 +65,7 @@ display_context pdisplay_context[1];
 
 void print_usage()
 {
-	printf("-h264 filename -layer layerdepId<<4+qualityId -write_yuv yuv_file_name\n");
+	printf("svc [-h264 filename] [-network] -layer layerdepId<<4+qualityId -write_yuv yuv_file_name\n");
 }
 char silent_flag = 0;
 char loss_flag = 0;
@@ -137,6 +133,7 @@ int main(int argc, char* argv[]) { /* for link with C runtime boot */
 	logStr("start log\n");
 	log_flush();
 	init_memory_cache();
+
 	if(!read_video_init(argc,argv))
 	{
 		print_usage();
