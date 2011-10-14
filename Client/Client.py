@@ -15,6 +15,7 @@ class Client:
         
         self.unpacket = unpacket()
         self.startSVCPlayer()
+        self.okPacketNum = 0
         
         time.sleep(2)
         self.initNetwork()
@@ -40,8 +41,11 @@ class Client:
         
         (pktno, ) = struct.unpack('!H', payload[0:2]);
         if ok:
-            print pktno, " is ok!"
-            self.unpacket.put_one_rtp(payload[2:])
+            self.okPacketNum += 1
+            if pktno % 100 == 0:
+                print pktno, " is ok! all ok packet number is ", self.okPacketNum
+                
+            #self.unpacket.put_one_rtp(payload[2:])
         
     def initOfdmRx(self):
         self.ofdm_rx = ofdm_rx('2.4G', 128, 80, 32, 32, self.rxCallBack)
@@ -52,7 +56,7 @@ class Client:
             if nal == None:
                 time.sleep(0.1)
             else:
-                self.sock.send(struct.packet('!I', len(nal)) + nal)
+                self.sock.send(struct.pack('!I', len(nal)) + nal)
     def start(self):
         self.ofdm_rx.start()
         self.feedThread.start()
