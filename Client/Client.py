@@ -40,8 +40,8 @@ class Client:
         
         (pktno, ) = struct.unpack('!H', payload[0:2]);
         if ok:
+            print pktno, " is ok!"
             self.unpacket.put_one_rtp(payload[2:])
-            print pktno
         
     def initOfdmRx(self):
         self.ofdm_rx = ofdm_rx('2.4G', 128, 80, 32, 32, self.rxCallBack)
