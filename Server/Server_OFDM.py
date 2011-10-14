@@ -5,6 +5,7 @@ from datetime import datetime
 
 from SVCPacket.src.packetization import packet
 from ofdm import ofdm_tx
+import struct
 class ServerData:
     def __init__(self):
         self.fileName = '/root/gnuradio/graduate_demo/Server/svc.file'
@@ -21,6 +22,7 @@ class ServerData:
             if pktno % 100 == 0:
                 print pktno, ' ' ,len(one_packet)
             pktno += 1
+			one_packet = struct.pack("!H", pktno) + one_packet
             self.tx.send_pkt(one_packet)
             one_packet = self.pack.get_one_packet()
 
