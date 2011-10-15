@@ -23,6 +23,8 @@ class Client:
         self.initOfdmRx()
 
         self.ofdm_rx.wait() 
+
+        self.pktNoSet = set([0])
         print 'init client ok!'
     def startSVCPlayer(self):
         filePath = '../error-conceal/Libs/SVC/bin/svc'
@@ -41,11 +43,14 @@ class Client:
         
         (pktno, ) = struct.unpack('!H', payload[0:2]);
         if ok:
+            if pktno in self.pktNoSet and pktno < 20:
+                return 
             self.okPacketNum += 1
-            if pktno % 100 == 0:
-                print pktno, " is ok! all ok packet number is ", self.okPacketNum
+            self.pktNoSet.add(pktno)
+            if pktno < 20 or pktno % 100 == 0:
+                print pktno, " is ok! all ok packet number is ", self.okPacketNum, "length is ", len(payload) - 2
                 
-            #self.unpacket.put_one_rtp(payload[2:])
+            self.unpacket.put_one_rtp(payload[2:])
         
     def initOfdmRx(self):
         self.ofdm_rx = ofdm_rx('2.4G', 128, 80, 32, 32, self.rxCallBack)

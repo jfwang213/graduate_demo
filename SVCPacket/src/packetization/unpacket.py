@@ -2,7 +2,6 @@ import struct,threading
 from SVCPacket.src.utils import log
 from rtp_utils import get_rtp_header_len,check_rtp_fu_as,get_seq_num,get_fu_a_header
 from nal_utils import get_nal_type
-import pdb
 class unpacket:
 	def __init__(self,log_id=-1):
 		self.nals = []
@@ -18,7 +17,8 @@ class unpacket:
 			if self.rtp_end:
 				self.rtp_con.release()
 				return None
-			self.rtp_con.wait(1)
+            #wait will release the contition and acquire it after time expire
+			self.rtp_con.wait(1) 
 		one_rtp = self.rtp_buffer[0]
 		self.rtp_buffer = self.rtp_buffer[1:]
 		self.rtp_con.release()
@@ -39,7 +39,8 @@ class unpacket:
 		return rtp_type
 	def extract_nal_from_nor_rtp(self,rtp_payload):
 		return rtp_payload
-	def extract_nal_from_fu_a_rtp(self,rtp_payloads,rtps):
+	
+    def extract_nal_from_fu_a_rtp(self,rtp_payloads,rtps):
 		nal = ''
 		if not check_rtp_fu_as(rtps):
 			log.log_str('fu check error',self.log_id)
@@ -47,8 +48,8 @@ class unpacket:
 		for i in range(len(rtp_payloads)):
 			nal += rtp_payloads[i][2:]
 		return nal
-		pass
-	def extract_nal_from_stap_a_rtp(self,rtp_payload):
+	
+    def extract_nal_from_stap_a_rtp(self,rtp_payload):
 		rtp_payload = rtp_payload[1:]
 		nals = []
 		while len(rtp_payload)>0:
@@ -56,8 +57,8 @@ class unpacket:
 			nals.append(rtp_payload[2:now_nal_size+2])
 			rtp_payload = rtp_payload[now_nal_size+2:]
 		return nals
-		pass
-	def get_one_nal(self):
+	
+    def get_one_nal(self):
 		#pdb.set_trace()
 		if len(self.nals) >0:
 			res = self.nals[0]
