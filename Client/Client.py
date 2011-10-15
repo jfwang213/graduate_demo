@@ -10,10 +10,12 @@ from socket import *
 from ofdm.ofdm_rx import ofdm_rx
 
 from SVCPacket.src.packetization.unpacket import unpacket
+from SVCPacket.src.utils import log
 class Client:
     def __init__(self):
-        
-        self.unpacket = unpacket()
+       
+        log.log_start(1) 
+        self.unpacket = unpacket(0)
         self.startSVCPlayer()
         self.okPacketNum = 0
         

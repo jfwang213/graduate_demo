@@ -4,7 +4,7 @@ sys.path.append('..')
 from datetime import datetime
 
 from SVCPacket.src.packetization import packet
-from SVCPacket.utils import log
+from SVCPacket.src.utils import log
 from ofdm import ofdm_tx
 import struct
 class ServerData:
@@ -12,7 +12,7 @@ class ServerData:
         self.fileName = 'svc.file'
         print datetime.now()
         print self.fileName
-        log.start_log(1)
+        log.log_start(1)
         self.pack = packet.packet(self.fileName, 400, 177, 0)
         self.tx = ofdm_tx.ofdm_tx('2.4G', 128, 80, 32, 64)
 
