@@ -15,6 +15,7 @@ class packet:
         self.first_byte = 0
         self.log_id = log_id
         self.nal_num = 0
+        self.accessUnitID = 0
         
     def end(self):
         read_video.close_file()
@@ -29,6 +30,9 @@ class packet:
             return header + payload
         #deal with new nal
         if len(self.nals) == 0:
+            log.log_str('read one access unit access unit id ' +
+                str(self.accessUnitID))
+            self.accessUnitID += 1
             au = read_video.read_one_access_unit()
             if au == None:
                 return None
@@ -52,7 +56,7 @@ class packet:
                 payload = self.build_stap_a_payload(self.nals[0:num])
         self.nals = self.nals[consume_nal_num:]
         return header + payload
-        pass
+        
     def cal_stap_a_nal_num(self,au_left_nals,left_space):
         num = 0
         left_space -= 1
@@ -64,6 +68,7 @@ class packet:
         if left_space <0:
             num -= 1
         return num
+
     def build_stap_a_payload(self,nals):
         fb = 0
         for i in range(len(nals)):
@@ -77,7 +82,7 @@ class packet:
             payload += struct.pack("!H",len(nals[i].video_byte))
             payload += nals[i].video_byte
         return payload
-        pass
+
     def build_fu_a_payload(self,left_nal,left_space,start):
         log.log_str('fu_a start '+str(start),self.log_id)
         
@@ -97,9 +102,9 @@ class packet:
         log.log_str('fu_a consume size '+str(left_space),self.log_id)
         return (left_space,payload)
         
-        pass
     def build_nor_payload(self,nal):
         return nal.video_byte
+
     def build_rtp_header(self):
         fb = 0
         v = 2
