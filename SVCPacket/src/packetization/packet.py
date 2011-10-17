@@ -7,7 +7,7 @@ class packet:
         read_video.file_name = file_name
         read_video.init_file(read_video.file_name)
         self.mtu_size = mtu_size
-        self.seq_num = 0
+        self.seq_num = 1
         self.ssrc = ssrc
         self.timestamp = 0
         self.nals = []
@@ -31,7 +31,7 @@ class packet:
         #deal with new nal
         if len(self.nals) == 0:
             log.log_str('read one access unit access unit id ' +
-                str(self.accessUnitID))
+                str(self.accessUnitID), self.log_id)
             self.accessUnitID += 1
             au = read_video.read_one_access_unit()
             if au == None:
