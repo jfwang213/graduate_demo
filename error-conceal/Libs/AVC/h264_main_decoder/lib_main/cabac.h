@@ -72,7 +72,6 @@ static __inline void refill(CABACContext *c){
 	
 	c -> low -= CABAC_MASK;
 	c -> bytestream += (CABAC_BITS >> 3);
-	logStr("fill %d\n",c->bytestream-c->bytestream_start);
 }
 
 

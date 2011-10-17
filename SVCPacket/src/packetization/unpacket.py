@@ -56,6 +56,8 @@ class unpacket:
             now_nal_size = struct.unpack('!H',rtp_payload[0:2])[0]
             nals.append(rtp_payload[2:now_nal_size+2])
             rtp_payload = rtp_payload[now_nal_size+2:]
+        log.log_str('extract nal from stap, nal number: ' + str(len(nals)),
+            self.log_id)
         return nals
     
     def get_one_nal(self):

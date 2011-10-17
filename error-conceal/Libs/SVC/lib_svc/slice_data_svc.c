@@ -223,7 +223,6 @@ int SliceDataICabacSvc(unsigned char *Data,  const int NalBytesInNalunit, int Po
 
 	//Decoding process macroblock per macroblock of one slice
 	do {
-		logStr("mb addr %d\tcabac read length:%d\n",iCurrMbAddr,cabac->bytestream-cabac->bytestream_start);
 		init_block(&Block[iCurrMbAddr]);
 		init_residu(&CurrResidu[iCurrMbAddr]);
 		CurrResidu[iCurrMbAddr] . SliceNum = SliceTable [iCurrMbAddr] = Slice -> slice_num ;

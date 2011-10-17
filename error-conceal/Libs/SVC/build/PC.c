@@ -101,7 +101,7 @@ int main(int argc, char* argv[]) { /* for link with C runtime boot */
 	NAL* next_nal = NULL;
 	
 	char isEnd = 0;
-	char isCheck = 1;
+	char isCheck = -1;
 	int checkNum = 0;
 	int accessId = 0;
 	int write_yuv = parse_arg_write_yuv(argc,argv,yuvFileName);
@@ -155,10 +155,6 @@ int main(int argc, char* argv[]) { /* for link with C runtime boot */
 			logStr("quit\n");
 			
 			break;
-		}
-		if (accessId == 515)
-		{
-			accessId = accessId;
 		}
 		current_access_unit = get_one_access_unit(pdecoder_context->all_sps,pdecoder_context->all_pps,pdecoder_context);
 		if (NULL == current_access_unit)

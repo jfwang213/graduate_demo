@@ -1,7 +1,7 @@
 # Project: SVC
 # Modified by Mederic Blestel <mblestel@insa-rennes.fr>
 
-DEBUG = no
+DEBUG = yes
 
 OBJ = obj/PC.o obj/read_video.o obj/decoder_svc_layer_nal.o obj/decoder_base_layer_nal.o obj/cal_time.o obj/write_yuv_file.o obj/network.o obj/loss_utils.o obj/decode_access_unit.o
 LINKOBJ  = obj/PC.o obj/read_video.o obj/decoder_svc_layer_nal.o obj/decoder_base_layer_nal.o obj/cal_time.o obj/write_yuv_file.o obj/network.o obj/loss_utils.o obj/decode_access_unit.o
