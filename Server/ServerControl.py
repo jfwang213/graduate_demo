@@ -12,6 +12,7 @@ class FreqAssign(object):
 
     def pack(self):
         content = struct.pack("!BIff", 2, self.requestID, self.midFreq, self.freqWidth)
+        return content
 
 
 class ClientAllRequest(object):
@@ -20,12 +21,12 @@ class ClientAllRequest(object):
         self.macAddr = macAddr
 
     def PutOneReq(self, clientReq):
-        if self.reqs[clientReq.requestID] != None:
+        if clientReq.requestID in self.reqs:
             print "requestID ", clientReq.requestID, "is already exist. Update It"
         self.reqs[clientReq.requestID] = clientReq
 
     def GetOneReq(self, requestID):
-        if self.reqs[requestID] == None:
+        if not requestID in self.reqs:
             print "requestID %d is not exist" % requestID
             return None
         return self.reqs[requestID]
@@ -38,7 +39,7 @@ class ClientRequest(object):
         self.midFreq = 0
         self.allocFreqWidth = 0
 
-    def PutResult(midFreq, freqWidth):
+    def PutResult(self, midFreq, freqWidth):
         self.midFreq = midFreq
         self.allocFreqWidth = freqWidth
 
@@ -52,13 +53,13 @@ class ServerControl(object):
 
     
     def GetOneClient(self, macAddress):
-        client = self.clients[macAddress]
-        if client != None:
+        if not macAddress in self.clients:
             print "can't not find client with mac address %d" % macAddress
-        return client
+            return None
+        return self.clients[macAddress]
 
     def PutOneClient(self, macAddress, client):
-        if self.clients[macAddress] == None:
+        if macAddress in self.clients:
             print "macAddress %d already exists" % macAddress
         self.clients[macAddress] = client
 
@@ -76,7 +77,7 @@ class ServerControl(object):
     def DealWithFreqRequest(self, srcMac, payload):
         print "receive freq request packet"
         (reqID, freqWidth) = struct.unpack("!If", payload[0:8])
-        client = GetOneClient(srcMac)
+        client = self.GetOneClient(srcMac)
         if client == None:
             client = ClientAllRequest(srcMac)
             self.PutOneClient(srcMac, client)
@@ -84,6 +85,7 @@ class ServerControl(object):
         if clientReq == None:
             clientReq = ClientRequest(srcMac, reqID, freqWidth)
             clientReq.PutResult(2450, freqWidth * self.ratio)
+            client.PutOneReq(clientReq)
         freqAssign = FreqAssign(reqID, clientReq.midFreq, clientReq.allocFreqWidth)
         sendContent = struct.pack("!II", self.macAddress, srcMac)
         sendContent += freqAssign.pack()
