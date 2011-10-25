@@ -23,28 +23,18 @@ def main():
             print "he says:", payload[2:]
         print "ok: %r \t pktno: %d \t n_rcvd: %d \t n_right: %d" % (ok, pktno, n_rcvd, n_right)
 
-
-    parser = OptionParser(option_class=eng_option, conflict_handler="resolve")
-    expert_grp = parser.add_option_group("Expert")
-    parser.add_option("","--discontinuous", action="store_true", default=False,
-                      help="enable discontinuous")
-    transceiver.add_options(parser, expert_grp)
-    args = ['-f', '2.4G', '-u', '1']
-    (options, args) = parser.parse_args(args)
-
-    tr = transceiver(rx_callback, options)
-    r = gr.enable_realtime_scheduling()
-    if r != gr.RT_OK:
-        print "Warning: failed to enable realtime scheduling"
-
+    tr = transceiver(rx_callback)
+    
     tr.start()
     sendPktno = 0
     try:
         while True:
             content = raw_input("I say:")
+            content = content + 'a' * (1500 - len(content))
             content = struct.pack("!H", sendPktno) + content
             sendPktno += 1
             tr.send_pkt(content)
+            time.sleep(0.1)
             if content == 'end':
                 break
     except KeyboardInterrupt:

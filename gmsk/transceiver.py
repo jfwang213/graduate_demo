@@ -11,8 +11,15 @@ import usrp_receive_path
 import usrp_transmit_path
 
 class transceiver(gr.top_block):
-    def __init__(self, callback, options):
+    def __init__(self, callback):
         gr.top_block.__init__(self)
+        
+        parser = OptionParser(option_class=eng_option, conflict_handler="resolve")
+        expert_grp = parser.add_option_group("Expert")
+        parser.add_option("","--discontinuous", action="store_true", default=False, help="enable discontinuous")
+        transceiver.add_options(parser, expert_grp)
+        args = ['-f', '2.4G', '-u', '1']
+        (options, args) = parser.parse_args(args)
 
         #init receive
         self._rx_freq = options.rx_freq
@@ -42,6 +49,10 @@ class transceiver(gr.top_block):
         mods = modulation_utils.type_1_mods()
         self.tx_path = usrp_transmit_path.usrp_transmit_path(mods[options.modulation], options)
         self.connect(self.tx_path)
+        r = gr.enable_realtime_scheduling()
+        if r != gr.RT_OK:
+            print "Warning: failed to enable realtime scheduling"
+
 
     def send_pkt(self, payload='', eof=False):
         return self.tx_path.send_pkt(payload, eof)
