@@ -67,8 +67,11 @@ class Client:
     def feedPlayer(self):
         while True:
             nal = self.unpacket.get_one_nal()
-            if nal == None:
+            if nal == '':
                 time.sleep(0.1)
+            elif nal == None:
+                self.sock.close()
+                break;
             else:
                 self.sock.send(struct.pack('!I', len(nal)) + nal)
     def start(self):

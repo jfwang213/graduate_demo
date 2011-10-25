@@ -36,6 +36,8 @@ class packet:
             au = read_video.read_one_access_unit()
             if au == None:
                 return None
+            log.log_str('access unit id ' + str(self.accessUnitID) + ' nals number: ' + str(len(au.nals)),
+                self.log_id)
             self.nal_num += len(au.nals)
             self.nals += au.nals
         curr_nal = self.nals[0]

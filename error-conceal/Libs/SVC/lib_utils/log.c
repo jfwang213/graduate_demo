@@ -150,21 +150,18 @@ void log_memory_state(NAL *pcNal,MMO *pcMmo)
 {
 #ifdef _LOG_
 	int i,j;
-	if (pcNal->bFinishAccessUnit)
-	{
-		logStr("********************memory state*****************************\n");
-		for(i = 0;i<pcNal->LayerId;i++)
-		{
-			LAYER_MMO* layerMmo = &(pcMmo->LayerMMO[i]);
-			DEP_MMO* dep_mmo = layerMmo->dep_mmo;
-			logStr("layerId:%d\tshortRefCount:%d\tlongRefCount:%d\n",i,dep_mmo->ShortRefCount,dep_mmo->LongRefCount);
-			for (j = 0;j<dep_mmo->ShortRefCount;j++)
-			{
-				logStr("\tpoc:%d\n",dep_mmo->ShortRef[j].poc);
-			}
-		}
-		nAccessUintId++;
-	}
+    logStr("********************memory state*****************************\n");
+    for(i = 0;i<=pcNal->LayerId;i++)
+    {
+        LAYER_MMO* layerMmo = &(pcMmo->LayerMMO[i]);
+        DEP_MMO* dep_mmo = layerMmo->dep_mmo;
+        logStr("layerId:%d\tshortRefCount:%d\tlongRefCount:%d\n",i,dep_mmo->ShortRefCount,dep_mmo->LongRefCount);
+        for (j = 0;j<dep_mmo->ShortRefCount;j++)
+        {
+            logStr("\tpoc:%d\n",dep_mmo->ShortRef[j].poc);
+        }
+    }
+    nAccessUintId++;
 #endif
 }
 

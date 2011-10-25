@@ -41,7 +41,7 @@ class TestServer:
                 self.client.receive_one_packet(one_packet)
             curPktNo += 1
             one_packet = self.pack.get_one_packet()
-            time.sleep(0.1)
+            time.sleep(0.01)
 
 
 class TestClient:
@@ -68,7 +68,6 @@ class TestClient:
         self.sock = socket(AF_INET, SOCK_STREAM)
         self.sock.connect(("127.0.0.1", port))
 
-        self.feedThread = threading.Thread(target = self.feedPlayer)
 
     def receive_one_packet(self,packet):
         self.unpacket.put_one_rtp(packet)
@@ -76,11 +75,16 @@ class TestClient:
     def feedPlayer(self):
         while True:
             nal = self.unpacket.get_one_nal()
-            if nal == None:
+            if nal == '':
                 time.sleep(0.1)
+            elif nal == None:
+                self.sock.close()
+                break; 
             else:
                 self.sock.send(struct.pack('!I', len(nal)) + nal)
+                pass
     def start(self):
+        self.feedThread = threading.Thread(target = self.feedPlayer)
         self.initNetwork()
         self.feedThread.start()
 

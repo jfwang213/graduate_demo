@@ -77,6 +77,7 @@ void fill_frame_num_gap(MMO *mmo, int baseLayerId, int MaxFrameNum, int num_ref_
 	}
 	memset(Current_pic, 0, sizeof(LIST_MMO));
 
+    logStr("fill_frame_num_gap for layerId %d prev frame num is %d curr frame num is %d\n", baseLayerId, depMmo->prev_frame_num, currentSlice->frame_num);
 	//get eclist
 	high_layer_id = baseLayerId+1;
 	while(layer_id_table[high_layer_id] != -1 && layer_id_table[high_layer_id]>>4 == layer_id_table[baseLayerId]>>4)
@@ -90,9 +91,15 @@ void fill_frame_num_gap(MMO *mmo, int baseLayerId, int MaxFrameNum, int num_ref_
 	high_layer_id--;
 	eclist_head = mmo->LayerMMO[high_layer_id].eclist;
 	for (; i > 0; i--){
+        logStr("temp_list %x\n", temp_list);
 		if (temp_list = get_next_wrap(eclist_head,temp_list))
 		{
+            logStr("get one LIST_MMO from eclist temp_list %x\n", temp_list);
 			Current_pic[0] = *(LIST_MMO*)temp_list->wrap_con;
+            // free link node but not content
+            remove_list_wrap(temp_list);
+			free(temp_list);
+            temp_list = NULL;
 		}
 		else
 		{
@@ -511,6 +518,7 @@ void execute_ref_pic_marking(SPS* sps,MMO *Mmo, int baseLayerId,int highestLayer
 	store_base_layer_flag = dep_mmo->store_ref_base_pic_flag;
 	bIdrFlag = dep_mmo->idr_flag;
 	bDealWithBase = (baseLayerId != highestLayerId) && store_base_layer_flag;
+    logStr("execute ref pic mark for baseLayer: %d\n", baseLayerId);
 	if (bDealWithBase)
 	{
 		logStr("deal with base layer ref pic marking\n");
@@ -632,6 +640,7 @@ void execute_ref_pic_marking(SPS* sps,MMO *Mmo, int baseLayerId,int highestLayer
 			}
 		}
 	}
+    logStr("after ref mark short ref count: %d\n", dep_mmo -> ShortRefCount);
 }
 
 

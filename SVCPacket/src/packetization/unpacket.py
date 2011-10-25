@@ -45,6 +45,7 @@ class unpacket:
         if not check_rtp_fu_as(rtps):
             log.log_str('fu check error',self.log_id)
             return nal
+        log.log_str('fu check succeed', self.log_id)
         for i in range(len(rtp_payloads)):
             nal += rtp_payloads[i][2:]
         return nal
