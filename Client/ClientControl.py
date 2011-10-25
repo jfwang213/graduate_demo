@@ -36,7 +36,7 @@ class ClientControl(object):
             print "wrong packetType %d" % packetType
 
     def DealWithFreqAssign(self, payload):
-        (reqID, midFreq, freqWidth) = struct.unpack("!Iff", packet[0:12])
+        (reqID, midFreq, freqWidth) = struct.unpack("!Iff", payload[0:12])
         print "receive freq assign packet reqID %d midFreq %f freqWidth %f" % (reqID, midFreq, freqWidth)
 
     def start(self):
