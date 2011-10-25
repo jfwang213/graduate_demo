@@ -71,7 +71,7 @@ class ServerControl(object):
             print "receive others' packet address is %d" % dstMac
             return
         if packetType == 1:
-            DealWithFreqRequest(srcMac, packet[9:])
+            self.DealWithFreqRequest(srcMac, packet[9:])
 
     def DealWithFreqRequest(self, srcMac, payload):
         print "receive freq request packet"
