@@ -18,7 +18,7 @@ class transceiver(gr.top_block):
         expert_grp = parser.add_option_group("Expert")
         parser.add_option("","--discontinuous", action="store_true", default=False, help="enable discontinuous")
         transceiver.add_options(parser, expert_grp)
-        args = ['-f', '2.4G', '-u', '1']
+        args = ['-f', '2.4G', '-u', '1', '-i', '64', '-d', '32']
         (options, args) = parser.parse_args(args)
 
         #init receive
