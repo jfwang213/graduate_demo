@@ -30,7 +30,6 @@ def main():
     try:
         while True:
             content = raw_input("I say:")
-            content = content + 'a' * (1500 - len(content))
             content = struct.pack("!H", sendPktno) + content
             sendPktno += 1
             tr.send_pkt(content)
