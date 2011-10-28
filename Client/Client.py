@@ -21,6 +21,7 @@ class Client(object):
         if self.dataChannel:
             print "stop data channel"
             self.dataChannel.stop()
+            self.dataChannel.deconstruction()
             del self.dataChannel
             self.dataChannel = None
 

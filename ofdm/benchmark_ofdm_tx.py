@@ -56,7 +56,12 @@ class my_top_block(gr.top_block):
         self.txpath = transmit_path(options)
 
         self.connect(self.txpath, self.u)
-        
+
+    def __del__(self):
+        self.disconnect_all()
+        del self.txpath
+        del self.u
+
     def _setup_usrp_sink(self):
         """
         Creates a USRP sink, determines the settings for best bitrate,

@@ -45,14 +45,18 @@ class ofdm_tx(object):
             print 'Warning: failed to enable realtime scheduling'
 
         self.tb.start()
-
         print 'tx init ok!'
+
+    def __del__(self):
+        print "del ofdm_tx"
+        del self.tb
 
     def send_pkt(self, payload='', eof=False):
         self.tb.txpath.send_pkt(payload, eof)
 
     def wait(self):
         self.tb.wait()
+
 if __name__ == '__main__':
     tx = ofdm_tx('2.4G', 128, 80, 32)
     size = 400

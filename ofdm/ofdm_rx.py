@@ -51,6 +51,9 @@ class ofdm_rx(object):
         self.n_right = 0
         
         print 'rx init ok!'
+    def __del__(self):
+        print "delete ofdm_rx"
+        del self.tb
     
     def rx_callback(self, ok, payload):
         self.n_rcvd += 1
@@ -63,6 +66,9 @@ class ofdm_rx(object):
         self.tb.wait()
     def start(self):
         self.tb.start()
+    def stop(self):
+        self.tb.stop()
+        self.tb.wait()
 if __name__ == '__main__':
     tx = ofdm_rx('2.4G', 128, 80, 32)
     tx.start()

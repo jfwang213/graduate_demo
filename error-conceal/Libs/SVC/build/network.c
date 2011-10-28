@@ -20,6 +20,7 @@ int receive_socket;
 struct sockaddr_in client_addr;
 struct sockaddr_in server_addr;
 static int nal_num = 0;
+static int network_recv_end = 0;
 const char *serverIpAddress = "127.0.0.1";
 const short serverPortNumber = 12345;
 int network_init()
@@ -74,6 +75,7 @@ int network_init()
 		return 0;
 	}
     printf("accept one client!\n");
+    network_recv_end = 0;
 	return 1;
 }
 
@@ -109,6 +111,9 @@ NAL* get_one_nal_from_network(decoder_context *pdecoder_context)
 	int len,i;
 	unsigned char buf[10];
 	NAL* res = NULL;
+    if (network_recv_end) {
+        return NULL;
+    }
 	if(!recv_fix_len(receive_socket,4,buf))
 	{
 		return NULL;
@@ -119,6 +124,10 @@ NAL* get_one_nal_from_network(decoder_context *pdecoder_context)
 	{
 		len=(len<<8)+buf[i];
 	}
+    if (len == 0) {
+        network_recv_end = 1;
+        return NULL;
+    }
 	res = (NAL*)malloc(sizeof(NAL));
 	init_nal(res,pdecoder_context);
 	res->prbsp_memory = (unsigned char*)malloc(len+20);

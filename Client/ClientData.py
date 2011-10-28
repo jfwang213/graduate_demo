@@ -17,7 +17,7 @@ class ClientData(object):
         log.log_start(1) 
         self.unpacket = unpacket(0)
         self.svcProcess = None
-        #self.startSVCPlayer()
+        self.startSVCPlayer()
         self.okPacketNum = 0
         
         time.sleep(2)
@@ -68,26 +68,29 @@ class ClientData(object):
         while not self.stopFeed:
             nal = self.unpacket.get_one_nal()
             if nal == '':
+                print "get one blank"
                 time.sleep(0.1)
             elif nal == None:
                 break;
             else:
                 self.sock.send(struct.pack('!I', len(nal)) + nal)
+        self.sock.send(struct.pack('!I', 0))
         self.sock.close()
+        print "end of feed player"
 
     def start(self):
         self.ofdm_rx.start()
         self.feedThread.start()
-        self.ofdm_rx.wait()
-        self.correctReceivePacketLog.close()
-        self.log.close()
-
+        
     def stop(self):
         #stop ofdm rx
         self.ofdm_rx.stop()
         self.ofdm_rx.wait()
         #stop feed and player
         self.stopFeed = True
-        if self.svcProcess:
-            self.svcProcess.kill()
-
+        self.unpacket.rtp_end = True
+        self.correctReceivePacketLog.close()
+        self.log.close()
+    def deconstruction(self):
+        print "deconstruction of ClientData"
+        del self.ofdm_rx

@@ -64,7 +64,13 @@ class my_top_block(gr.top_block):
         self.rxpath = receive_path(callback, options)
 
         self.connect(self.u, self.rxpath)
-        
+
+    def __del__(self):
+        print "del ofdm rx"
+        self.disconnect_all()
+        del self.u
+        del self.rxpath
+
     def _setup_usrp_source(self):
         self.u = usrp.source_c (fusb_block_size=self._fusb_block_size,
                                 fusb_nblocks=self._fusb_nblocks)
