@@ -3,6 +3,8 @@ sys.path.append('..')
 from gmsk.transceiver import transceiver
 
 import struct
+from socket import *
+from collections import deque 
 
 class FreqAssign(object):
     def __init__(self, requestID, midFreq, freqWidth):
@@ -50,8 +52,17 @@ class ServerControl(object):
         self.ratio = 0.5
         
         self.tr = transceiver(self.ReceivePacket)
+        self.serverDataChannelFree = deque()
+        self.serverDataChannelActive = {}
+        self.serverSocket = socket(AF_INET, SOCK_STREAM)
+        self.serverSocket.bind(("127.0.0.1", 12346)
 
-    
+    def WaitForDataChannel(self):
+        while True:
+            (channel, addr) = self.serverSocket.accept()
+            print "accept one channel"
+            self.serverDataChannelFree.append(channel)
+
     def GetOneClient(self, macAddress):
         if not macAddress in self.clients:
             print "can't not find client with mac address %d" % macAddress
@@ -86,10 +97,20 @@ class ServerControl(object):
             clientReq = ClientRequest(srcMac, reqID, freqWidth)
             clientReq.PutResult(2450, freqWidth * self.ratio)
             client.PutOneReq(clientReq)
+            dataChannel = self.serverDataChannelFree.popleft()
+            self.serverDataChannelActive[srcMac] = dataChannel
+
         freqAssign = FreqAssign(reqID, clientReq.midFreq, clientReq.allocFreqWidth)
         sendContent = struct.pack("!II", self.macAddress, srcMac)
         sendContent += freqAssign.pack()
         self.tr.send_pkt(sendContent)
+
+        self.StartDataChannel(self.serverDataChannelActive[srcMac]
+
+    def StartDataChannel(self, channelConn):
+        content = struct.pack("!BB", 9, 1) #len commandType:start
+        content += struct.pack("!ff", 0, 0) #midFreq freqWidth
+        channelConn.send(content)
 
     def Start(self):
         print "Start Server"
