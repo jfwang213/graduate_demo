@@ -53,6 +53,11 @@ class transceiver(gr.top_block):
         if r != gr.RT_OK:
             print "Warning: failed to enable realtime scheduling"
 
+    def __del__(self):
+        print "delete transciever"
+        self.disconnect_all()
+        del self.rx_path
+        del self.tx_path
 
     def send_pkt(self, payload='', eof=False):
         return self.tx_path.send_pkt(payload, eof)

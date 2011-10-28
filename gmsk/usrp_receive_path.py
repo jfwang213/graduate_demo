@@ -64,14 +64,19 @@ class usrp_receive_path(gr.hier_block2):
         self._demod_class = demod_class
         self._setup_usrp_source(options)
 
-        rx_path = receive_path.receive_path(demod_class, rx_callback, options)
-        for attr in dir(rx_path): #forward the methods
+        self.rx_path = receive_path.receive_path(demod_class, rx_callback, options)
+        for attr in dir(self.rx_path): #forward the methods
             if not attr.startswith('_') and not hasattr(self, attr):
-                setattr(self, attr, getattr(rx_path, attr))
+                setattr(self, attr, getattr(self.rx_path, attr))
 
         #connect
-        self.connect(self.u, rx_path)
+        self.connect(self.u, self.rx_path)
 
+    def __del__(self):
+        print "del usrp_receive_path"
+        self.disconnect_all()
+        del self.u
+        del self.rx_path
     def _setup_usrp_source(self, options):
         self.u = usrp_options.create_usrp_source(options)
         adc_rate = self.u.adc_rate()

@@ -31,9 +31,9 @@ import sys
 
 class receive_path(gr.hier_block2):
     def __init__(self, demod_class, rx_callback, options):
-	gr.hier_block2.__init__(self, "receive_path",
-				gr.io_signature(1, 1, gr.sizeof_gr_complex), # Input signature
-				gr.io_signature(0, 0, 0))                    # Output signature
+        gr.hier_block2.__init__(self, "receive_path",
+                gr.io_signature(1, 1, gr.sizeof_gr_complex), # Input signature
+                gr.io_signature(0, 0, 0))                    # Output signature
 
         
         options = copy.copy(options)    # make a copy so we can destructively modify
@@ -73,14 +73,20 @@ class receive_path(gr.hier_block2):
         if self._verbose:
             self._print_verbage()
 
-	# connect block input to channel filter
-	self.connect(self, self.channel_filter)
+        # connect block input to channel filter
+        self.connect(self, self.channel_filter)
 
         # connect the channel input filter to the carrier power detector
         self.connect(self.channel_filter, self.probe)
 
         # connect channel filter to the packet receiver
         self.connect(self.channel_filter, self.packet_receiver)
+    def __del__(self):
+        print "delete receive path"
+        self.disconnect_all()
+        del self.packet_receiver 
+        del self.channel_filter
+        del self.probe
 
     def bitrate(self):
         return self._bitrate

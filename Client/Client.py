@@ -1,88 +1,82 @@
 #!/usr/bin/env python
-import sys
-sys.path.append('..')
+from ClientData import ClientData
+from ClientControl import ClientControl
 
-import time
-import subprocess
-import threading
-import struct
-from socket import *
-from ofdm.ofdm_rx import ofdm_rx
-
-from SVCPacket.src.packetization.unpacket import unpacket
-from SVCPacket.src.utils import log
-class Client:
+class Client(object):
     def __init__(self):
-       
-        log.log_start(1) 
-        self.unpacket = unpacket(0)
-        #self.startSVCPlayer()
-        self.okPacketNum = 0
-        
-        time.sleep(2)
-        self.initNetwork()
-        
-        self.initOfdmRx()
+        self.dataChannel = None
+        self.ctlChannel = None
+        pass
+    def startDataChannel(self):
+        if self.dataChannel:
+            self.endDataChannel()
+        if self.ctlChannel:
+            self.endCtlChannel()
 
-        self.pktNoSet = set([0])
-        self.lastOkPktno = 0
-        print 'init client ok!'
+        print "start data channel"
+        self.dataChannel = ClientData()
+        self.dataChannel.start()
 
-        self.ofdm_rx.wait() 
+    def endDataChannel(self):
+        if self.dataChannel:
+            print "stop data channel"
+            self.dataChannel.stop()
+            del self.dataChannel
+            self.dataChannel = None
 
-        #init log correct receive packet
-        self.correctReceivePacketLog = file("correctReceivePacket.log", "w")
-        self.log = file('client.log', 'w')
-    def startSVCPlayer(self):
-        filePath = '../error-conceal/Libs/SVC/bin/svc'
-        svcProcess = subprocess.Popen([filePath, '-network', '-layer', '16'])
+    def receiveDataChannelAssign(self, width): #1 is big 2 is small
+        if width == 1:
+            self.startDataChannel()
+        else:
+            self.startDataChannel()
+    def startCtlChannel(self):
+        if self.dataChannel:
+            self.endDataChannel()
+        if self.ctlChannel:
+            self.endCtlChannel()
+        print "start ctl channel"
+        self.ctlChannel = ClientControl(2, self.receiveDataChannelAssign)
+        self.ctlChannel.start()
 
+    def sendCtlChannelRequest(self):
+        if self.ctlChannel:
+            print "send control channel request"
+            self.ctlChannel.sendFreqReq()
 
-    def initNetwork(self):
-        port = 12345
-        self.sock = socket(AF_INET, SOCK_STREAM)
-        self.sock.connect(("127.0.0.1", port))
+    def endCtlChannel(self):
+        if self.ctlChannel:
+            print "end ctl channel"
+            self.ctlChannel.stop()
+            self.ctlChannel.deconstruct()
+            del self.ctlChannel
+            self.ctlChannel = None
 
-        self.feedThread = threading.Thread(target = self.feedPlayer)
-
-
-    def rxCallBack(self, ok, payload):
-        (pktno, ) = struct.unpack('!H', payload[0:2]);
-        if ok:
-            if pktno in self.pktNoSet and pktno < 20:
-                return 
-            self.okPacketNum += 1
-            if (pktno < self.lastOkPktno):
-                self.log.write("pkt order is not right after " + str(self.lastOkPktno) + " receive " + str(pktno) + '\n')
-                return 
-            for i in range(pktno - self.lastOkPktno - 1):
-                self.correctReceivePacketLog.write(str(i + self.lastOkPktno + 1) + '\n')
-            self.pktNoSet.add(pktno)
-            self.unpacket.put_one_rtp(payload[2:])
-            self.lastOkPktno = pktno
-        
-    def initOfdmRx(self):
-        self.ofdm_rx = ofdm_rx('2.4G', 128, 80, 32, 32, self.rxCallBack)
-
-    def feedPlayer(self):
-        while True:
-            nal = self.unpacket.get_one_nal()
-            if nal == '':
-                time.sleep(0.1)
-            elif nal == None:
-                self.sock.close()
-                break;
-            else:
-                self.sock.send(struct.pack('!I', len(nal)) + nal)
-    def start(self):
-        self.ofdm_rx.start()
-        self.feedThread.start()
-        self.ofdm_rx.wait()
-        self.correctReceivePacketLog.close()
-        self.log.close()
-
+    def endAll(self):
+        if self.ctlChannel:
+            self.endCtlChannel()
+        if self.dataChannel:
+            self.endDataChannel()
 
 
 if __name__ == "__main__":
     client = Client()
-    client.start()
+    
+    try:
+        while True:
+            command = raw_input("input the command:\n")
+            if command == "stopdata":
+                client.endDataChannel()
+            elif command == "startctl":
+                client.startCtlChannel()
+            elif command == "startdata":
+                client.startDataChannel()
+            elif command == "stopctl":
+                client.endCtlChannel()
+            elif command == "end":
+                break
+            elif command == "sendreq":
+                client.sendCtlChannelRequest()
+
+    except KeyboardInterrupt:
+        pass
+    client.endAll()
