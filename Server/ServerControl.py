@@ -18,8 +18,11 @@ class FreqAssign(object):
 
 
 class ClientAllRequest(object):
+"""
+One Customer has several request
+"""
     def __init__(self, macAddr):
-        self.reqs = {}
+        self.reqs = {} #requests of clients
         self.macAddr = macAddr
 
     def PutOneReq(self, clientReq):
@@ -41,9 +44,10 @@ class ClientRequest(object):
         self.midFreq = 0
         self.allocFreqWidth = 0
 
-    def PutResult(self, midFreq, freqWidth):
+    def PutResult(self, midFreq, freqWidth, dataChannel):
         self.midFreq = midFreq
         self.allocFreqWidth = freqWidth
+        self.dataChannel = dataChannel
 
 class ServerControl(object):
     def __init__(self):
@@ -53,7 +57,7 @@ class ServerControl(object):
         
         self.tr = transceiver(self.ReceivePacket)
         self.serverDataChannelFree = deque()
-        self.serverDataChannelActive = {}
+        self.serverDataChannelActive = {} #{mac: socket}
         self.serverSocket = socket(AF_INET, SOCK_STREAM)
         self.serverSocket.bind(("127.0.0.1", 12346)
 
@@ -85,6 +89,17 @@ class ServerControl(object):
         if packetType == 1:
             self.DealWithFreqRequest(srcMac, packet[9:])
 
+    def DealWithFreqRelease(self, srcMac, payload):
+        (reqID) = struct.unpack("!I", payload[0:4])
+        client = self.GetOneClient(srcMac)
+        if client != None:
+            clientReq = client.GetOneReq(reqID)
+            if clientReq != None:
+                dataChannel = clientReq.dataChannel
+                self.EndDataChannel(dataChannel)
+                # free data channel
+                self.serverDataChannelFreq.append(dataChannel)
+
     def DealWithFreqRequest(self, srcMac, payload):
         print "receive freq request packet"
         (reqID, freqWidth) = struct.unpack("!If", payload[0:8])
@@ -95,21 +110,38 @@ class ServerControl(object):
         clientReq = client.GetOneReq(reqID)
         if clientReq == None:
             clientReq = ClientRequest(srcMac, reqID, freqWidth)
-            clientReq.PutResult(2450, freqWidth * self.ratio)
-            client.PutOneReq(clientReq)
+            if len(self.serverDataChannelFree) == 0:
+                raise Exception("no free channel")
             dataChannel = self.serverDataChannelFree.popleft()
-            self.serverDataChannelActive[srcMac] = dataChannel
+            clientReq.PutResult(2450, freqWidth * self.ratio, dataChannel)
+            client.PutOneReq(clientReq)
+
+        # if it is not the first request, end the server data channel
+        self.EndDataChannel(self.serverDataChannelActive[srcMac])
 
         freqAssign = FreqAssign(reqID, clientReq.midFreq, clientReq.allocFreqWidth)
         sendContent = struct.pack("!II", self.macAddress, srcMac)
         sendContent += freqAssign.pack()
         self.tr.send_pkt(sendContent)
 
-        self.StartDataChannel(self.serverDataChannelActive[srcMac]
+        # start the data channel
+        self.StartDataChannel(self.serverDataChannelActive[srcMac])
 
     def StartDataChannel(self, channelConn):
         content = struct.pack("!BB", 9, 1) #len commandType:start
         content += struct.pack("!ff", 0, 0) #midFreq freqWidth
+        channelConn.send(content)
+
+    def StopDataChannel(self, channelConn):
+        content = struct.pack("!BB", 1, 2)
+        channelConn.send(content)
+
+    def EndDataChannel(self, channelConn):
+        content = struct.pack("!BB", 1, 3)
+        channelConn.send(content)
+
+    def RestartDataChannel(self, channelConn):
+        content = struct.pack("!BB", 1, 4)
         channelConn.send(content)
 
     def Start(self):

@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 from ClientData import ClientData
 from ClientControl import ClientControl
-
+from threading import Semaphore
+import time
 class Client(object):
     def __init__(self):
         self.dataChannel = None
         self.ctlChannel = None
+        self.sem = Semaphore(0)
         pass
     def startDataChannel(self):
         if self.dataChannel:
@@ -26,10 +28,12 @@ class Client(object):
             self.dataChannel = None
 
     def receiveDataChannelAssign(self, width): #1 is big 2 is small
+        self.sem.release()
         if width == 1:
             self.startDataChannel()
         else:
             self.startDataChannel()
+
     def startCtlChannel(self):
         if self.dataChannel:
             self.endDataChannel()
@@ -58,6 +62,13 @@ class Client(object):
         if self.dataChannel:
             self.endDataChannel()
 
+    def work(self):
+        self.startCtlChannel()
+        self.sem.acquire()
+        time.sleep(1)
+        self.endCtlChannel()
+        self.startDataChannel()
+
 
 if __name__ == "__main__":
     client = Client()
@@ -77,6 +88,8 @@ if __name__ == "__main__":
                 break
             elif command == "sendreq":
                 client.sendCtlChannelRequest()
+            elif command == 'work':
+                client.work()
 
     except KeyboardInterrupt:
         pass
