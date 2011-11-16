@@ -22,7 +22,7 @@ class ServerDataChannel:
         self.stopSend = False
         self.sendWarmUp()
         self.pack = packet.packet(self.fileName, 400, 177, 0)
-        self.tx = ofdm_tx.ofdm_tx('2.4G', 128, 80, 32, 64)
+        self.tx = ofdm_tx.ofdm_tx('2.45G', 128, 80, 32, 64)
         one_packet = self.pack.get_one_packet()
         pktno = 0
         while one_packet and not self.stopSend:
@@ -65,9 +65,9 @@ class ServerData(object):
     def ConnectServer(self):
         port = 12346
         self.sock = socket(AF_INET, SOCK_STREAM)
-        self.sock.connect(("127.0.0.1", port))
+        self.sock.connect(("219.224.167.185", port))
    
-    def RecvFixLen(length):
+    def RecvFixLen(self, length):
         res = ''
         while length > 0:
             content = self.sock.recv(length);
@@ -76,7 +76,7 @@ class ServerData(object):
 
     def ReceiveCommand(self):
         while True:
-            content = RecvFixLen(2)
+            content = self.RecvFixLen(2)
             (commandLen, commandType) = struct.unpack("!BB", content[0:2])
             if commandType == 1: #start
                 content = RecvFixLen(8)
@@ -85,7 +85,7 @@ class ServerData(object):
             elif commandType == 2: #stop
                 self.serverDataChannel.stopSend()
             elif commandType == 3: #end
-                break
+                self.serverDataChannel.stopSend()
 
 if __name__ == '__main__':
     server = ServerData()
