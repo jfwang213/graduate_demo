@@ -18,7 +18,6 @@ class FreqRequest(object):
 class ClientControl(object):
     def __init__(self, macAddress, channelAssignCB):
         self.macAddress = macAddress
-        self.tr = transceiver(self.ReceivePacket)
         self.requestID = 1
         self.channelAssignCB = channelAssignCB
     def __del__(self):
@@ -46,18 +45,24 @@ class ClientControl(object):
 
     def start(self):
         print "start client control"
-        self.tr.start()
+        if self.tr:
+            self.tr.start()
 
     def stop(self):
         print "stop client control"
-        self.tr.send_pkt(eof=True)
-        self.tr.stop()
-        self.tr.wait()
+        if self.tr:
+            self.tr.send_pkt(eof=True)
+            self.tr.stop()
+            self.tr.wait()
+
+    def construct(self):
+        self.tr = transceiver(self.ReceivePacket)
 
     def deconstruct(self):
         print "deconstruct client control"
-        del self.tr
-        self.tr = None
+        if self.tr:
+            del self.tr
+            self.tr = None
         
     def sendFreqReq(self):
         freqReq = FreqRequest(self.requestID, 1)
@@ -67,3 +72,5 @@ class ClientControl(object):
 
         self.tr.send_pkt(sendContent)
 
+    def finishFreqReq(self):
+        self.requestID += 1
