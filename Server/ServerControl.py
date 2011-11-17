@@ -88,17 +88,20 @@ class ServerControl(object):
                     self.DealWithDataChannelCommand(soc)
 
     def DealWithDataChannelCommand(self, clientSock):
-        data = RecvFixLen(clientSock, 1)
-        command = struct.unpack("!B", data)[0]
+        data = RecvFixLen(clientSock, 2)
+        command = struct.unpack("!BB", data)[1]
         if command == QUIT:
             clientID = RecvFixLen(clientSock, 4)
             clientID = struct.unpack('!I', clientID)[0]
             self.serverDataChannelFree.remove(clientSock)
+            print "client %d quit free num is %d" %(clientID, len(self.serverDataChannelFree))
 
     def AddOneDataChannel(self, channelSock):
         content = struct.pack("!BBI", 5, ASSIGNID, self.nextClientID)
+        self.nextClientID += 1
         channelSock.send(content)
         self.serverDataChannelFree.append(channelSock)
+        print "add one client free nuber is %d" % (len(self.serverDataChannelFree))
 
     def WaitForDataChannel(self):
         while self.notQuit:
@@ -158,7 +161,7 @@ class ServerControl(object):
             client.PutOneReq(clientReq)
 
         # if it is not the first request, end the server data channel
-        self.EndDataChannel(self.serverDataChannelActive[srcMac])
+        self.EndDataChannel(clientReq.dataChannel)
 
         freqAssign = FreqAssign(reqID, clientReq.midFreq, clientReq.allocFreqWidth)
         sendContent = struct.pack("!II", self.macAddress, srcMac)
@@ -166,7 +169,7 @@ class ServerControl(object):
         self.tr.send_pkt(sendContent)
 
         # start the data channel
-        self.StartDataChannel(self.serverDataChannelActive[srcMac])
+        self.StartDataChannel(clientReq.dataChannel)
 
     def StartDataChannel(self, channelConn):
         content = struct.pack("!BB", 9, STARTSEND) #len commandType:start
@@ -189,7 +192,7 @@ class ServerControl(object):
 
     def Stop(self):
         print "Stop Server"
-        self.tr.send_pkt(eof=False)
+        self.tr.send_pkt(eof=True)
         self.tr.stop()
         self.tr.wait()
         self.notQuit = False
