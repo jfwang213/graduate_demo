@@ -11,6 +11,10 @@ def main():
             if command == "end":
                 server.Stop()
                 break
+            elif command == "help":
+                print "end: stop the server"
+                print "help: show this message"
+                pass
     except KeyboardInterrupt:
         server.Stop()
 
