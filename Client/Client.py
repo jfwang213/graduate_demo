@@ -82,6 +82,11 @@ class Client(object):
             elif command == 'quit':
                 self.endAll()
                 break
+            elif command == "help":
+                print "start: start control channel and send request"
+                print "end: end control channel and data channel"
+                print "quit: end the client"
+                print "help: show this message"
                 
     def freqReqTimeoutCB(self):
         self.stateLock.acquire()
@@ -142,7 +147,6 @@ class Client(object):
 
 if __name__ == "__main__":
     client = Client()
-    
     try:
         client.userInteractThreadCB() 
     except KeyboardInterrupt:
