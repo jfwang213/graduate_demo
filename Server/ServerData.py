@@ -16,7 +16,7 @@ STOPSEND = 2
 ENDSEND = 3
 ASSIGNID = 4
 QUIT = 5
-class ServerDataChannel:
+class ServerDataChannel(object):
     def __init__(self):
         self.fileName = 'svc.file'
         log.log_start(1)
@@ -24,11 +24,13 @@ class ServerDataChannel:
         self.pack = None
         self.tx = None
 
-    def startSend(self):
+    def StartSend(self):
         self.stopSend = False
-        self.sendWarmUp()
         self.pack = packet.packet(self.fileName, 400, 177, 0)
         self.tx = ofdm_tx.ofdm_tx('2.45G', 128, 80, 32, 64)
+
+        self.SendWarmUp()
+        
         one_packet = self.pack.get_one_packet()
         pktno = 0
         while one_packet and not self.stopSend:
@@ -51,10 +53,10 @@ class ServerDataChannel:
         self.tx = None
 
 
-    def stopSend(self):
+    def StopSend(self):
         self.stopSend = True
             
-    def sendWarmUp(self):
+    def SendWarmUp(self):
         warmUpLen = 20
         one_packet = ' '*398
         one_packet = struct.pack("!H", 0) + one_packet
@@ -80,17 +82,18 @@ class ServerData(object):
             if commandType == STARTSEND: #start
                 content = RecvFixLen(self.sock, 8)
                 (midFreq, FreqWidth) = struct.unpack('!ff', content[0:8])
-                self.serverDataChannel.startSend()
+                self.serverDataChannel.StartSend()
             elif commandType == STOPSEND: #stop
-                self.serverDataChannel.stopSend()
+                self.serverDataChannel.StopSend()
             elif commandType == ENDSEND: #end
-                self.serverDataChannel.stopSend()
+                self.serverDataChannel.StopSend()
             elif commandType == ASSIGNID:
                 IDData = RecvFixLen(self.sock, 4)
                 self.clientID = struct.unpack('!I', IDData)[0]
+                print "get clientID %d" % self.clientID
 
     def QuitServer(self):
-        print "quit server"
+        print "quit server clientID %d" % (self.clientID)
         if self.sock:
             content = struct.pack("!BBI", 5, QUIT, self.clientID)
             self.sock.send(content)
