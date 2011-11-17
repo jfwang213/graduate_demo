@@ -10,6 +10,10 @@ import struct
 
 from socket import *
 
+STARTSEND = 1
+STOPSEND = 2
+ENDSEND = 3
+ASSIGNID = 4
 class ServerDataChannel:
     def __init__(self):
         self.fileName = 'svc.file'
@@ -62,6 +66,8 @@ class ServerData(object):
         self.ConnectServer()
         self.serverDataChannel = ServerDataChannel()
 
+        self.sock = None
+
     def ConnectServer(self):
         port = 12346
         self.sock = socket(AF_INET, SOCK_STREAM)
@@ -75,18 +81,29 @@ class ServerData(object):
             res += content
 
     def ReceiveCommand(self):
+        print "waiting for receiving commands"
         while True:
             content = self.RecvFixLen(2)
             (commandLen, commandType) = struct.unpack("!BB", content[0:2])
-            if commandType == 1: #start
+            if commandType == STARTSEND: #start
                 content = RecvFixLen(8)
                 (midFreq, FreqWidth) = struct.unpack('!ff', content[0:8])
                 self.serverDataChannel.startSend()
-            elif commandType == 2: #stop
+            elif commandType == STOPSEND: #stop
                 self.serverDataChannel.stopSend()
-            elif commandType == 3: #end
+            elif commandType == ENDSEND: #end
                 self.serverDataChannel.stopSend()
+            elif commandType == ASSIGNID:
+                IDData = RecvFixLen(4)
+                self.clientID = struct.unpack('!I', IDData)[0]
+
+    def QuitServer(self):
+        if self.sock:
+            
 
 if __name__ == '__main__':
-    server = ServerData()
-    server.ReceiveCommand()
+    try:
+        server = ServerData()
+        server.ReceiveCommand()
+    except KeyboardInterrupt:
+        
