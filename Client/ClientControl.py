@@ -6,20 +6,26 @@ from gmsk.transceiver import transceiver
 import time
 import struct
 
+FreqRequest = 1
+FreqAssign = 2
+FreqRelease = 3
+FreqReleaseACK = 4
 class FreqRequest(object):
     def __init__(self, requestID, freqWidth):
         self.requestID = requestID;
         self.freqWidth = freqWidth
 
     def pack(self):
-        content = struct.pack("!BIf", 1, self.requestID, self.freqWidth)
+        content = struct.pack("!BIf", FreqRequest, self.requestID, self.freqWidth)
         return content
 
 class ClientControl(object):
-    def __init__(self, macAddress, channelAssignCB):
+    def __init__(self, macAddress, channelAssignCB, freqReleaseACKCB):
         self.macAddress = macAddress
         self.requestID = 1
         self.channelAssignCB = channelAssignCB
+        self.freqReleaseACKCB = freqReleaseACKCB
+
     def __del__(self):
         print "delete client control class"
         if self.tr:
@@ -33,8 +39,18 @@ class ClientControl(object):
         if dstMac != self.macAddress:
             print "receive others' packet"
             return
-        if packetType == 2:#freqAssign
-            self.DealWithFreqAssign(packet[9:])
+        if packetType == FreqAssign:#freqAssign
+            reqID = struct.unpack("!I", packet[9:13])
+            if reqID == self.requestID:
+                self.DealWithFreqAssign(packet[9:])
+            else:
+                print "wrong request id for freq assign packet"
+        elif packetType == FreqReleaseACK:
+            reqID = struct.unpack("!I", packet[9:13])
+            if reqID == self.requestID:
+                self.freqReleaseACKCB(packet[9:])
+            else:
+                print "wrong request id for release ack packet"
         else:
             print "wrong packetType %d" % packetType
 
@@ -72,5 +88,11 @@ class ClientControl(object):
 
         self.tr.send_pkt(sendContent)
 
+    def sendFreqRelease(self):
+        sendContent = struct.pack("!II", self.macAddress, dstMac)
+        sendContent += struct.pack("!BI", FreqRelease, self.requestID)
+
+        self.tr.send_pkt(sendContent)
+        
     def finishFreqReq(self):
         self.requestID += 1
