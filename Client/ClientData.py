@@ -17,7 +17,7 @@ class ClientData(object):
         log.log_start(1) 
         self.unpacket = unpacket(0)
         self.svcProcess = None
-        self.startSVCPlayer()
+        #self.startSVCPlayer()
         self.okPacketNum = 0
         
         time.sleep(2)
@@ -36,7 +36,11 @@ class ClientData(object):
     def startSVCPlayer(self):
         filePath = '../error-conceal/Libs/SVC/bin/svc'
         self.svcProcess = subprocess.Popen([filePath, '-network', '-layer', '16'])
-
+    
+    def stopSVCPlayer(self):
+        if self.svcProcess:
+            self.svcProcess.kill()
+            self.svcProcess = None
 
     def initNetwork(self):
         port = 12345
@@ -47,9 +51,9 @@ class ClientData(object):
 
 
     def rxCallBack(self, ok, payload):
-        (pktno, ) = struct.unpack('!H', payload[0:2]);
+        (pktno, ) = struct.unpack('!H', payload[0:2])
         if ok:
-            if pktno in self.pktNoSet and pktno < 20:
+            if pktno in self.pktNoSet:
                 return 
             self.okPacketNum += 1
             if (pktno < self.lastOkPktno):
@@ -89,8 +93,11 @@ class ClientData(object):
         #stop feed and player
         self.stopFeed = True
         self.unpacket.rtp_end = True
+        self.stopSVCPlayer()
         self.correctReceivePacketLog.close()
         self.log.close()
+
     def deconstruction(self):
         print "deconstruction of ClientData"
         del self.ofdm_rx
+

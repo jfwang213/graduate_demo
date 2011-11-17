@@ -18,14 +18,22 @@ ENDSEND = 3
 ASSIGNID = 4
 QUIT = 5
 
+"""
+    the command between server control and user client.
+"""
+FreqReqCom = 1
+FreqAssignCom = 2
+FreqReleaseCom = 3
+FreqReleaseACKCom = 4
+
 class FreqAssign(object):
-    def __init__(self, requestID, midFreq, freqWidth):
-        self.requestID = requestID
+    def __init__(self, reqID, midFreq, freqWidth):
+        self.reqID = reqID
         self.midFreq = midFreq
         self.freqWidth = freqWidth
 
     def pack(self):
-        content = struct.pack("!BIff", 2, self.requestID, self.midFreq, self.freqWidth)
+        content = struct.pack("!BIff", FreqAssignCom, self.reqID, self.midFreq, self.freqWidth)
         return content
 
 
@@ -38,20 +46,24 @@ class ClientAllRequest(object):
         self.macAddr = macAddr
 
     def PutOneReq(self, clientReq):
-        if clientReq.requestID in self.reqs:
-            print "requestID ", clientReq.requestID, "is already exist. Update It"
-        self.reqs[clientReq.requestID] = clientReq
+        if clientReq.reqID in self.reqs:
+            print "requestID ", clientReq.reqID, "is already exist. Update It"
+        self.reqs[clientReq.reqID] = clientReq
 
-    def GetOneReq(self, requestID):
-        if not requestID in self.reqs:
-            print "requestID %d is not exist" % requestID
+    def GetOneReq(self, reqID):
+        if not reqID in self.reqs:
+            print "requestID %d is not exist" % reqID
             return None
-        return self.reqs[requestID]
+        return self.reqs[reqID]
+
+    def RemoveOneReq(self, reqID):
+        if reqID in self.reqs:
+            del self.reqs[reqID]
 
 class ClientRequest(object):
-    def __init__(self, macAddress, requestID, freqWidth):
+    def __init__(self, macAddress, reqID, freqWidth):
         self.macAddress = macAddress
-        self.requestID = requestID
+        self.reqID = reqID
         self.reqFreqWidth = freqWidth
         self.midFreq = 0
         self.allocFreqWidth = 0
@@ -130,8 +142,10 @@ class ServerControl(object):
         if dstMac != self.macAddress:
             print "receive others' packet address is %d" % dstMac
             return
-        if packetType == 1:
+        if packetType == FreqReqCom:
             self.DealWithFreqRequest(srcMac, packet[9:])
+        elif packetType == FreqReleaseCom:
+            self.DealWithFreqRelease(srcMac, packet[9:])
 
     def DealWithFreqRelease(self, srcMac, payload):
         (reqID) = struct.unpack("!I", payload[0:4])
@@ -143,6 +157,10 @@ class ServerControl(object):
                 self.EndDataChannel(dataChannel)
                 # free data channel
                 self.serverDataChannelFreq.append(dataChannel)
+                client.RemoveOneReq(reqID)
+        # if the release has been received before, still send the release ack 
+        sendContent = struct.pack("!IIBI", self.macAddress, srcMac, FreqReleaseACKCom, reqID)
+        self.tr.send_pkt(sendContent)
 
     def DealWithFreqRequest(self, srcMac, payload):
         print "receive freq request packet"
