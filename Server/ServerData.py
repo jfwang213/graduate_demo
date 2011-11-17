@@ -8,7 +8,7 @@ from SVCPacket.src.utils import log
 from ofdm import ofdm_tx
 import struct
 from Utils.SocketUtils import RecvFixLen
-
+import time
 from socket import *
 
 STARTSEND = 1
@@ -37,9 +37,10 @@ class ServerDataChannel(object):
             pktno += 1
             if pktno % 100 == 0:
                 print pktno, ' ' ,len(one_packet)
+                time.sleep(0.1)
             one_packet = struct.pack("!H", pktno) + one_packet
             self.tx.send_pkt(one_packet)
-            if pktno < 20:
+            if pktno < 20 or pktno % 3 == 0:
                 self.tx.send_pkt(one_packet)
             one_packet = self.pack.get_one_packet()
 
@@ -82,6 +83,7 @@ class ServerData(object):
             if commandType == STARTSEND: #start
                 content = RecvFixLen(self.sock, 8)
                 (midFreq, FreqWidth) = struct.unpack('!ff', content[0:8])
+                time.sleep(10)
                 self.serverDataChannel.StartSend()
             elif commandType == STOPSEND: #stop
                 self.serverDataChannel.StopSend()
