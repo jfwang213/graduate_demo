@@ -5,6 +5,7 @@ from gmsk.transceiver import transceiver
 import struct
 from socket import *
 from collections import deque 
+import threading, select
 
 class FreqAssign(object):
     def __init__(self, requestID, midFreq, freqWidth):
@@ -18,9 +19,9 @@ class FreqAssign(object):
 
 
 class ClientAllRequest(object):
-"""
-One Customer has several request
-"""
+    """
+    One Customer has several request
+    """
     def __init__(self, macAddr):
         self.reqs = {} #requests of clients
         self.macAddr = macAddr
@@ -59,13 +60,17 @@ class ServerControl(object):
         self.serverDataChannelFree = deque()
         self.serverDataChannelActive = {} #{mac: socket}
         self.serverSocket = socket(AF_INET, SOCK_STREAM)
-        self.serverSocket.bind(("127.0.0.1", 12346)
+        self.serverSocket.bind(("0.0.0.0", 12346))
+        self.serverSocket.listen(5)
+        self.notQuit = True
 
     def WaitForDataChannel(self):
-        while True:
-            (channel, addr) = self.serverSocket.accept()
-            print "accept one channel"
-            self.serverDataChannelFree.append(channel)
+        while self.notQuit:
+            rr,rw,err = select.select([self.serverSocket],[],[], 1)
+            if rr:
+                (channel, addr) = self.serverSocket.accept()
+                print "accept one channel", addr
+                self.serverDataChannelFree.append(channel)
 
     def GetOneClient(self, macAddress):
         if not macAddress in self.clients:
@@ -147,11 +152,14 @@ class ServerControl(object):
     def Start(self):
         print "Start Server"
         self.tr.start()
+        self.listenDataChannelThread = threading.Thread(target=self.WaitForDataChannel, args = ())
+        self.listenDataChannelThread.start()
 
     def Stop(self):
         print "Stop Server"
         self.tr.send_pkt(eof=False)
         self.tr.stop()
         self.tr.wait()
-
+        self.notQuit = False
+        self.listenDataChannelThread.join()
 
