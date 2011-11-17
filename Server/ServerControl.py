@@ -6,6 +6,14 @@ import struct
 from socket import *
 from collections import deque 
 import threading, select
+from Utils.SocketUtils import RecvFixLen
+
+
+"""
+    the command between server control and server data client.
+"""
+ASSIGNID = 1
+QUIT = 2
 
 class FreqAssign(object):
     def __init__(self, requestID, midFreq, freqWidth):
@@ -57,12 +65,34 @@ class ServerControl(object):
         self.ratio = 0.5
         
         self.tr = transceiver(self.ReceivePacket)
-        self.serverDataChannelFree = deque()
+        self.serverDataChannelFree = []
         self.serverDataChannelActive = {} #{mac: socket}
         self.serverSocket = socket(AF_INET, SOCK_STREAM)
         self.serverSocket.bind(("0.0.0.0", 12346))
         self.serverSocket.listen(5)
         self.notQuit = True
+
+        self.nextClientID = 0
+
+    def RecvDataChannelThreadCB(self):
+        while self.notQuit:
+            rlist, wlist, xlist = select.select(self.serverDataChannelFree, [], [], 1)
+            if rlist:
+                for soc in rlist:
+                    self.DealWithDataChannelCommand(soc)
+
+    def DealWithDataChannelCommand(self, clientSock):
+        data = RecvFixLen(clientSock, 1)
+        command = struct.unpack("!B", data)[0]
+        if command == QUIT:
+            clientID = RecvFixLen(clientSock, 4)
+            clientID = struct.unpack('!I', clientID)[0]
+            self.serverDataChannelFree.remove(clientSock)
+
+    def AddOneDataChannel(self, channelSock):
+        content = struct.pack("!BI", ASSIGNID, self.nextClientID)
+        channelSock.send(content)
+        self.serverDataChannelFree.append(channelSock)
 
     def WaitForDataChannel(self):
         while self.notQuit:
@@ -70,7 +100,7 @@ class ServerControl(object):
             if rr:
                 (channel, addr) = self.serverSocket.accept()
                 print "accept one channel", addr
-                self.serverDataChannelFree.append(channel)
+                self.AddOneDataChannel(channel)
 
     def GetOneClient(self, macAddress):
         if not macAddress in self.clients:
@@ -117,7 +147,7 @@ class ServerControl(object):
             clientReq = ClientRequest(srcMac, reqID, freqWidth)
             if len(self.serverDataChannelFree) == 0:
                 raise Exception("no free channel")
-            dataChannel = self.serverDataChannelFree.popleft()
+            dataChannel = self.serverDataChannelFree.pop()
             clientReq.PutResult(2450, freqWidth * self.ratio, dataChannel)
             client.PutOneReq(clientReq)
 
