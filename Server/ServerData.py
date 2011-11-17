@@ -7,6 +7,7 @@ from SVCPacket.src.packetization import packet
 from SVCPacket.src.utils import log
 from ofdm import ofdm_tx
 import struct
+from Utils.SocketUtils import RecvFixLen
 
 from socket import *
 
@@ -14,6 +15,7 @@ STARTSEND = 1
 STOPSEND = 2
 ENDSEND = 3
 ASSIGNID = 4
+QUIT = 5
 class ServerDataChannel:
     def __init__(self):
         self.fileName = 'svc.file'
@@ -62,31 +64,21 @@ class ServerDataChannel:
 
 class ServerData(object):
     def __init__(self):
-        
         self.ConnectServer()
         self.serverDataChannel = ServerDataChannel()
-
-        self.sock = None
 
     def ConnectServer(self):
         port = 12346
         self.sock = socket(AF_INET, SOCK_STREAM)
         self.sock.connect(("219.224.167.185", port))
    
-    def RecvFixLen(self, length):
-        res = ''
-        while length > 0:
-            content = self.sock.recv(length);
-            length -= len(content)
-            res += content
-
     def ReceiveCommand(self):
         print "waiting for receiving commands"
         while True:
-            content = self.RecvFixLen(2)
+            content = RecvFixLen(self.sock, 2)
             (commandLen, commandType) = struct.unpack("!BB", content[0:2])
             if commandType == STARTSEND: #start
-                content = RecvFixLen(8)
+                content = RecvFixLen(self.sock, 8)
                 (midFreq, FreqWidth) = struct.unpack('!ff', content[0:8])
                 self.serverDataChannel.startSend()
             elif commandType == STOPSEND: #stop
@@ -94,11 +86,16 @@ class ServerData(object):
             elif commandType == ENDSEND: #end
                 self.serverDataChannel.stopSend()
             elif commandType == ASSIGNID:
-                IDData = RecvFixLen(4)
+                IDData = RecvFixLen(self.sock, 4)
                 self.clientID = struct.unpack('!I', IDData)[0]
 
     def QuitServer(self):
+        print "quit server"
         if self.sock:
+            content = struct.pack("!BBI", 5, QUIT, self.clientID)
+            self.sock.send(content)
+        self.sock.close()
+        self.sock = None
             
 
 if __name__ == '__main__':
@@ -106,4 +103,4 @@ if __name__ == '__main__':
         server = ServerData()
         server.ReceiveCommand()
     except KeyboardInterrupt:
-        
+        server.QuitServer() 
