@@ -12,8 +12,11 @@ from Utils.SocketUtils import RecvFixLen
 """
     the command between server control and server data client.
 """
-ASSIGNID = 1
-QUIT = 2
+STARTSEND = 1
+STOPSEND = 2
+ENDSEND = 3
+ASSIGNID = 4
+QUIT = 5
 
 class FreqAssign(object):
     def __init__(self, requestID, midFreq, freqWidth):
@@ -73,6 +76,9 @@ class ServerControl(object):
         self.notQuit = True
 
         self.nextClientID = 0
+        
+        self.channelRecvThread = threading.Thread(target=self.RecvDataChannelThreadCB)
+        self.channelRecvThread.start()
 
     def RecvDataChannelThreadCB(self):
         while self.notQuit:
@@ -90,7 +96,7 @@ class ServerControl(object):
             self.serverDataChannelFree.remove(clientSock)
 
     def AddOneDataChannel(self, channelSock):
-        content = struct.pack("!BI", ASSIGNID, self.nextClientID)
+        content = struct.pack("!BBI", 5, ASSIGNID, self.nextClientID)
         channelSock.send(content)
         self.serverDataChannelFree.append(channelSock)
 
@@ -163,20 +169,16 @@ class ServerControl(object):
         self.StartDataChannel(self.serverDataChannelActive[srcMac])
 
     def StartDataChannel(self, channelConn):
-        content = struct.pack("!BB", 9, 1) #len commandType:start
+        content = struct.pack("!BB", 9, STARTSEND) #len commandType:start
         content += struct.pack("!ff", 0, 0) #midFreq freqWidth
         channelConn.send(content)
 
     def StopDataChannel(self, channelConn):
-        content = struct.pack("!BB", 1, 2)
+        content = struct.pack("!BB", 1, STOPSEND)
         channelConn.send(content)
 
     def EndDataChannel(self, channelConn):
-        content = struct.pack("!BB", 1, 3)
-        channelConn.send(content)
-
-    def RestartDataChannel(self, channelConn):
-        content = struct.pack("!BB", 1, 4)
+        content = struct.pack("!BB", 1, ENDSEND)
         channelConn.send(content)
 
     def Start(self):
