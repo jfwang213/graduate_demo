@@ -57,6 +57,9 @@ class ofdm_tx(object):
     def wait(self):
         self.tb.wait()
 
+    def stop(self):
+        self.tb.stop()
+
 if __name__ == '__main__':
     tx = ofdm_tx('2.4G', 128, 80, 32)
     size = 400

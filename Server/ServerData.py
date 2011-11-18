@@ -8,7 +8,7 @@ from SVCPacket.src.utils import log
 from ofdm import ofdm_tx
 import struct
 from Utils.SocketUtils import RecvFixLen
-import time
+import time, threading
 from socket import *
 
 STARTSEND = 1
@@ -25,7 +25,6 @@ class ServerDataChannel(object):
         self.tx = None
 
     def StartSend(self):
-        self.stopSend = False
         self.pack = packet.packet(self.fileName, 400, 177, 0)
         self.tx = ofdm_tx.ofdm_tx('2.45G', 128, 80, 32, 64)
 
@@ -36,8 +35,8 @@ class ServerDataChannel(object):
         while one_packet and not self.stopSend:
             pktno += 1
             if pktno % 100 == 0:
+                print self.stopSend
                 print pktno, ' ' ,len(one_packet)
-                time.sleep(0.1)
             one_packet = struct.pack("!H", pktno) + one_packet
             self.tx.send_pkt(one_packet)
             if pktno < 20 or pktno % 3 == 0:
@@ -81,13 +80,18 @@ class ServerData(object):
             content = RecvFixLen(self.sock, 2)
             (commandLen, commandType) = struct.unpack("!BB", content[0:2])
             if commandType == STARTSEND: #start
+                print "receive startsend command"
                 content = RecvFixLen(self.sock, 8)
                 (midFreq, FreqWidth) = struct.unpack('!ff', content[0:8])
+                self.serverDataChannel.stopSend = False
                 time.sleep(10)
-                self.serverDataChannel.StartSend()
+                sendThread = threading.Thread(target=self.serverDataChannel.StartSend)
+                sendThread.start()
             elif commandType == STOPSEND: #stop
+                print "receive stopsend command"
                 self.serverDataChannel.StopSend()
             elif commandType == ENDSEND: #end
+                print "receive endsend command"
                 self.serverDataChannel.StopSend()
             elif commandType == ASSIGNID:
                 IDData = RecvFixLen(self.sock, 4)
