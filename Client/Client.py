@@ -95,6 +95,7 @@ class Client(object):
                 if self.state == Idle:
                     self.ctlChannel = None
                     break
+                self.stateLock.release()
                 break
             elif command == "help":
                 print "start: start control channel and send request"
