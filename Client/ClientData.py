@@ -13,23 +13,22 @@ from SVCPacket.src.packetization.unpacket import unpacket
 from SVCPacket.src.utils import log
 class ClientData(object):
 
-    def __init__(self, dqID):
+    def __init__(self, dataWidth, dqID):
         log.log_start(1) 
         self.unpacket = unpacket(0)
         self.svcProcess = None
+        self.dqID = dqID
         self.startSVCPlayer()
         self.okPacketNum = 0
         
         time.sleep(2)
-        self.initNetwork()
-        
-        self.initOfdmRx()
+        self.initNetwork() 
+        self.initOfdmRx(dataWidth)
 
         self.pktNoSet = set([0])
         self.lastOkPktno = 0
         self.stopFeed = False
 
-        self.dqID = dqID
         print 'init client ok!'
 
         #init log correct receive packet
@@ -57,6 +56,7 @@ class ClientData(object):
         if ok:
             if pktno in self.pktNoSet:
                 return 
+            print pktno
             self.okPacketNum += 1
             if (pktno < self.lastOkPktno):
                 self.log.write("pkt order is not right after " + str(self.lastOkPktno) + " receive " + str(pktno) + '\n')
@@ -67,8 +67,9 @@ class ClientData(object):
             self.unpacket.put_one_rtp(payload[2:])
             self.lastOkPktno = pktno
         
-    def initOfdmRx(self):
-        self.ofdm_rx = ofdm_rx('2.45G', 128, 80, 32, 32, self.rxCallBack)
+    def initOfdmRx(self, dataWidth):
+        print dataWidth
+        self.ofdm_rx = ofdm_rx('2.45G', 128, dataWidth, 32, 32, self.rxCallBack)
 
     def feedPlayer(self):
         while not self.stopFeed:

@@ -27,10 +27,10 @@ class Client(object):
         self.log = Log('ClientLog.txt')
         pass
 
-    def startDataChannel(self, dqID):
+    def startDataChannel(self, dataWidth, dqID):
         self.log.LogStr("start data channel")
 
-        self.dataChannel = ClientData(dqID)
+        self.dataChannel = ClientData(dataWidth, dqID)
         self.dataChannel.start()
 
     def endDataChannel(self):
@@ -48,8 +48,10 @@ class Client(object):
         self.stateLock.acquire()
         self.log.LogStr("the state is %d" % (self.state))
         if width == 1:
+            dataWidth = 80
             dqID = 16
         elif width == 2:
+            dataWidth = 60
             dqID = 1
         else:
             self.log.LogStr("width is error!")
@@ -57,7 +59,7 @@ class Client(object):
 
         if self.state == GetFreq:
             self.endCtlChannel()
-            self.startDataChannel(dqID)
+            self.startDataChannel(dataWidth, dqID)
             self.state = StartData
         self.stateLock.release()
 
@@ -168,12 +170,6 @@ class Client(object):
         else:
             self.state = 0
         self.dealWithStateMachine()
-
-    def work(self):
-        self.startCtlChannel()
-        time.sleep(1)
-        self.endCtlChannel()
-        self.startDataChannel()
 
 
 if __name__ == "__main__":

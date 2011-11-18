@@ -4,8 +4,7 @@ sys.path.append("..")
 import time
 
 from SVCPacket.src.packetization import packet, unpacket
-from SVCPacket.src.utils import log
-
+from Utils.Log import Log
 import subprocess
 import threading
 import struct
@@ -14,9 +13,9 @@ from socket import *
 class TestServer:
     def __init__(self, client, dqID):
         self.fileName = "../Server/svc.file"
-        log.log_start(1)
         self.pack = packet.packet(self.fileName, 400, 177, dqID, 0)
         self.client = client
+        serverLog = Log("serverLog.txt")
 
     def startSend(self):
         lossFile = file("lostPacketNo.txt")
@@ -39,15 +38,14 @@ class TestServer:
             else:
                 #deliver it to client
                 self.client.receive_one_packet(one_packet)
+            serverLog.log("pktNo %d len %d" % (curPktNo, len(one_packet)))
             curPktNo += 1
             one_packet = self.pack.get_one_packet()
             time.sleep(0.01)
 
-
 class TestClient:
     def __init__(self, dqID):
        
-        log.log_start(1) 
         self.unpacket = unpacket.unpacket(0)
         self.startSVCPlayer()
         self.okPacketNum = 0
@@ -89,7 +87,7 @@ class TestClient:
         self.feedThread.start()
 
 if __name__ == '__main__':
-    dqID = 1
+    dqID = 16
     client = TestClient(dqID)
     server = TestServer(client, dqID)
     client.start()

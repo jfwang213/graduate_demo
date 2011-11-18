@@ -20,7 +20,7 @@ class ofdm_rx(object):
 
         if callback == None:
             callback = self.rx_callback
-        args = ['-d', str(dinter), '-R', 'B']        
+        args = ['-d', str(dinter), '-R', 'B', '-v']        
         args.append('-f')
         args.append(str(midFreq))
         args.append('--fft-length')
