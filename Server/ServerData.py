@@ -4,7 +4,6 @@ sys.path.append('..')
 from datetime import datetime
 
 from SVCPacket.src.packetization import packet
-from SVCPacket.src.utils import log
 from ofdm import ofdm_tx
 import struct
 from Utils.SocketUtils import RecvFixLen
@@ -19,17 +18,22 @@ QUIT = 5
 class ServerDataChannel(object):
     def __init__(self):
         self.fileName = 'svc.file'
-        log.log_start(1)
         self.stopSend = True
         self.pack = None
         self.tx = None
 
     def StartSend(self, width, dqID):
+        self.stopSend = False
         print "width %f dqID %d" % (width, dqID)
-        self.pack = packet.packet(self.fileName, 400, 177, dqID, 0)
+        self.pack = packet.packet(self.fileName, 400, 177, dqID)
+        #wait for client
+        sleepNum = 0
+        while not self.stopSend and sleepNum < 100:
+            time.sleep(0.1)
+            sleepNum += 1
         dataWidth = 80
         if width < 1.1:
-            dataWidth = 60
+            dataWidth = 64
         self.tx = ofdm_tx.ofdm_tx('2.45G', 128, dataWidth, 32, 64)
 
         self.SendWarmUp()
@@ -67,11 +71,14 @@ class ServerDataChannel(object):
 
         for i in range(warmUpLen):
             self.tx.send_pkt(one_packet)
+            if self.stopSend:
+                break
 
 class ServerData(object):
     def __init__(self):
         self.ConnectServer()
         self.serverDataChannel = ServerDataChannel()
+        self.sendThread = None
 
     def ConnectServer(self):
         port = 12346
@@ -87,20 +94,18 @@ class ServerData(object):
                 print "receive startsend command"
                 content = RecvFixLen(self.sock, 8)
                 (midFreq, FreqWidth) = struct.unpack('!ff', content[0:12])
-                self.serverDataChannel.stopSend = False
-                time.sleep(10)
                 if FreqWidth < 1.1:
                     dqID = 1
                 else:
                     dqID = 16
-                sendThread = threading.Thread(target=self.serverDataChannel.StartSend, args=[FreqWidth, dqID])
-                sendThread.start()
+                self.sendThread = threading.Thread(target=self.serverDataChannel.StartSend, args=[FreqWidth, dqID])
+                self.sendThread.start()
             elif commandType == STOPSEND: #stop
                 print "receive stopsend command"
-                self.serverDataChannel.StopSend()
+                self.StopSend()
             elif commandType == ENDSEND: #end
                 print "receive endsend command"
-                self.serverDataChannel.StopSend()
+                self.StopSend()
             elif commandType == ASSIGNID:
                 IDData = RecvFixLen(self.sock, 4)
                 self.clientID = struct.unpack('!I', IDData)[0]
@@ -114,7 +119,12 @@ class ServerData(object):
         self.sock.close()
         self.sock = None
         self.serverDataChannel.StopSend()
-            
+
+    def StopSend(self):
+        self.serverDataChannel.StopSend()
+        if self.sendThread:
+            self.sendThread.join()
+            self.sendThread = None
 
 if __name__ == '__main__':
     try:
