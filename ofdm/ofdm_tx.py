@@ -17,7 +17,7 @@ class ofdm_tx(object):
             occupied_len == None or cp_len == None:
             print 'param is not ok!'
             return
-        args = ['--tx-amplitude', '5000', '-i', str(inter), '-T', 'B']        
+        args = ['--tx-amplitude', '5000', '-i', str(inter), '-T', 'B', '-v']        
         args.append('-f')
         args.append(str(midFreq))
         args.append('--fft-length')
