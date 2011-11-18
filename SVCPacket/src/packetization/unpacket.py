@@ -1,15 +1,15 @@
 import struct,threading
-from SVCPacket.src.utils import log
+from Utils.Log import Log
 from rtp_utils import get_rtp_header_len,check_rtp_fu_as,get_seq_num,get_fu_a_header
 from nal_utils import get_nal_type
 class unpacket:
-    def __init__(self,log_id=-1):
+    def __init__(self):
         self.nals = []
         self.next_rtp = None
         self.rtp_con = threading.Condition()
         self.rtp_buffer = []
         self.rtp_end = False
-        self.log_id = log_id
+        self.unpacketLog = Log("unpacketLog.txt")
 
     def get_one_rtp(self):
         self.rtp_con.acquire()
@@ -43,9 +43,9 @@ class unpacket:
     def extract_nal_from_fu_a_rtp(self,rtp_payloads,rtps):
         nal = ''
         if not check_rtp_fu_as(rtps):
-            log.log_str('fu check error',self.log_id)
+            self.unpacketLog.LogStr('fu check error')
             return nal
-        log.log_str('fu check succeed', self.log_id)
+        self.unpacketLog.LogStr('fu check succeed')
         for i in range(len(rtp_payloads)):
             nal += rtp_payloads[i][2:]
         return nal
@@ -57,8 +57,7 @@ class unpacket:
             now_nal_size = struct.unpack('!H',rtp_payload[0:2])[0]
             nals.append(rtp_payload[2:now_nal_size+2])
             rtp_payload = rtp_payload[now_nal_size+2:]
-        log.log_str('extract nal from stap, nal number: ' + str(len(nals)),
-            self.log_id)
+        self.unpacketLog.LogStr('extract nal from stap, nal number: ' + str(len(nals)))
         return nals
     
     def get_one_nal(self):
@@ -79,22 +78,22 @@ class unpacket:
             now_payload = now_rtp[header_len:]
             rtp_type = self.get_rtp_type(now_payload)
             if rtp_type <=23:
-                log.log_str("receive one nor rtp",self.log_id)
+                self.unpacketLog.LogStr("receive one nor rtp")
                 res = self.extract_nal_from_nor_rtp(now_payload)
                 return res
             elif rtp_type == 24:
-                log.log_str('receive one stap_a rtp',self.log_id)
+                self.unpacketLog.LogStr('receive one stap_a rtp')
                 self.nals = self.extract_nal_from_stap_a_rtp(now_payload)
                 res = self.nals[0]
                 self.nals = self.nals[1:]
                 return res
             elif rtp_type == 28:
                 #pdb.set_trace()
-                log.log_str('receive one fu_a rtp',self.log_id)
+                self.unpacketLog.LogStr('receive one fu_a rtp')
                 rtp_payloads = []
                 rtps = []
                 now_seq_num = get_seq_num(now_rtp)
-                log.log_str('fu_a start seq num '+str(now_seq_num),self.log_id)
+                self.unpacketLog.LogStr('fu_a start seq num '+str(now_seq_num))
                 fu_a_end = False
                 while now_rtp != None and (not fu_a_end):
                     header_len = get_rtp_header_len(now_rtp)
@@ -121,7 +120,7 @@ class unpacket:
                             rtp_payloads.append(now_payload)
                             now_rtp = self.get_one_rtp()
                 now_seq_num = get_seq_num(rtps[-1])
-                log.log_str('fu_a end seq num '+str(now_seq_num),self.log_id)
+                self.unpacketLog.LogStr('fu_a end seq num '+str(now_seq_num))
                 res = self.extract_nal_from_fu_a_rtp(rtp_payloads,rtps)
                 return res
             else:

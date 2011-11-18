@@ -107,6 +107,9 @@ access_unit* get_one_access_unit(SPS* all_sps,PPS* all_pps,decoder_context *pdec
 				next_nal->LayerId = 0;
 			}
 			break;
+        default:
+            next_nal->DqId = 0;
+            break;
 		}
 		if (14 == next_nal->NalUnitType)
 		{

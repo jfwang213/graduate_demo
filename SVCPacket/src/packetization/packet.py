@@ -1,9 +1,9 @@
 import read_video
 import struct
 import pdb
-from SVCPacket.src.utils import log
+from Utils.Log import Log
 class packet:
-    def __init__(self, file_name, mtu_size, ssrc, dqID, log_id=-1):
+    def __init__(self, file_name, mtu_size, ssrc, dqID):
         read_video.file_name = file_name
         read_video.init_file(read_video.file_name)
         self.mtu_size = mtu_size
@@ -13,10 +13,10 @@ class packet:
         self.nals = []
         self.left_nal = ""
         self.first_byte = 0
-        self.log_id = log_id
         self.nal_num = 0
         self.accessUnitID = 0
         self.dqID = dqID
+        self.packetLog = Log("packetLog.txt")
         
     def end(self):
         read_video.close_file()
@@ -24,7 +24,7 @@ class packet:
     def extractNalsBydqID(self, nals):
         res = []
         for nal in nals:
-            log.log_str('get one nal with dqID %d' % nal.nal_dqID, self.log_id)
+            self.packetLog.LogStr('get one nal with dqID %d' % nal.nal_dqID)
             if nal.nal_dqID <= self.dqID:
                 res.append(nal)
         return res
@@ -40,20 +40,19 @@ class packet:
             return header + payload
         #deal with new nal
         while len(self.nals) == 0:
-            log.log_str('read one access unit access unit id ' +
-                str(self.accessUnitID), self.log_id)
+            self.packetLog.LogStr('read one access unit access unit id ' +
+                str(self.accessUnitID))
             self.accessUnitID += 1
             au = read_video.read_one_access_unit()
             if au == None:
                 return None
-            log.log_str('access unit id ' + str(self.accessUnitID) + ' nals number: ' + str(len(au.nals)),
-                self.log_id)
+            self.packetLog.LogStr('access unit id ' + str(self.accessUnitID) + ' nals number: ' + str(len(au.nals)))
             self.nals += self.extractNalsBydqID(au.nals)
             self.nal_num = len(self.nals)
 
         curr_nal = self.nals[0]
         if len(curr_nal.video_byte) > left_space:
-            log.log_str('one large nal: nal size '+str(len(curr_nal.video_byte)), self.log_id)
+            self.packetLog.LogStr('one large nal: nal size '+str(len(curr_nal.video_byte)))
             self.left_nal = curr_nal.video_byte
             self.first_byte = struct.unpack('!B',self.left_nal[0:1])[0]
             (consume_size,payload) = self.build_fu_a_payload(self.left_nal,left_space,1)
@@ -91,13 +90,13 @@ class packet:
         payload = ""
         payload += struct.pack("!B",fb)
         for i in range(len(nals)):
-            log.log_str('stap_a one nal size:'+str(len(nals[i].video_byte)),self.log_id)
+            self.packetLog.LogStr('stap_a one nal size:'+str(len(nals[i].video_byte)))
             payload += struct.pack("!H",len(nals[i].video_byte))
             payload += nals[i].video_byte
         return payload
 
     def build_fu_a_payload(self,left_nal,left_space,start):
-        log.log_str('fu_a start '+str(start),self.log_id)
+        self.packetLog.LogStr('fu_a start '+str(start))
         
         left_space -= 2
         payload = ''
@@ -109,10 +108,10 @@ class packet:
             left_space = len(left_nal)
             sb |= 1<<6
         sb = sb | (self.first_byte&31)
-        log.log_str('fu_header '+str(sb),self.log_id)
+        self.packetLog.LogStr('fu_header '+str(sb))
         payload = struct.pack('!BB',fb,sb)
         payload += left_nal[0:left_space]
-        log.log_str('fu_a consume size '+str(left_space),self.log_id)
+        self.packetLog.LogStr('fu_a consume size '+str(left_space))
         return (left_space,payload)
         
     def build_nor_payload(self,nal):
@@ -131,7 +130,7 @@ class packet:
         sb += pt + (M<<7)
         
         header = ""
-        log.log_str('seq num '+str(self.seq_num),self.log_id)
+        self.packetLog.LogStr('seq num '+str(self.seq_num))
         header += struct.pack('!BBHII',fb,sb,self.seq_num,self.timestamp,self.ssrc)
         self.seq_num += 1
         return header

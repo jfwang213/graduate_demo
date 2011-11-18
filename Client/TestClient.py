@@ -13,9 +13,9 @@ from socket import *
 class TestServer:
     def __init__(self, client, dqID):
         self.fileName = "../Server/svc.file"
-        self.pack = packet.packet(self.fileName, 400, 177, dqID, 0)
+        self.pack = packet.packet(self.fileName, 400, 177, dqID)
         self.client = client
-        serverLog = Log("serverLog.txt")
+        self.serverLog = Log("serverLog.txt")
 
     def startSend(self):
         lossFile = file("lostPacketNo.txt")
@@ -38,7 +38,7 @@ class TestServer:
             else:
                 #deliver it to client
                 self.client.receive_one_packet(one_packet)
-            serverLog.log("pktNo %d len %d" % (curPktNo, len(one_packet)))
+            self.serverLog.LogStr("pktNo %d len %d" % (curPktNo, len(one_packet)))
             curPktNo += 1
             one_packet = self.pack.get_one_packet()
             time.sleep(0.01)
@@ -46,7 +46,7 @@ class TestServer:
 class TestClient:
     def __init__(self, dqID):
        
-        self.unpacket = unpacket.unpacket(0)
+        self.unpacket = unpacket.unpacket()
         self.startSVCPlayer()
         self.okPacketNum = 0
         
