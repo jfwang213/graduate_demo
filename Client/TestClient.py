@@ -47,7 +47,7 @@ class TestClient:
     def __init__(self, dqID):
        
         self.unpacket = unpacket.unpacket()
-        self.startSVCPlayer()
+        #self.startSVCPlayer()
         self.okPacketNum = 0
         
         time.sleep(2)
@@ -87,7 +87,7 @@ class TestClient:
         self.feedThread.start()
 
 if __name__ == '__main__':
-    dqID = 16
+    dqID = 1
     client = TestClient(dqID)
     server = TestServer(client, dqID)
     client.start()

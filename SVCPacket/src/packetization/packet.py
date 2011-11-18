@@ -17,6 +17,7 @@ class packet:
         self.accessUnitID = 0
         self.dqID = dqID
         self.packetLog = Log("packetLog.txt")
+        self.packetNumber = 1
         
     def end(self):
         read_video.close_file()
@@ -30,12 +31,15 @@ class packet:
         return res
 
     def get_one_packet(self):
+
+        self.packetLog.LogStr('************* packet id %d **********************' % self.packetNumber)
+        self.packetNumber += 1
         consume_nal_num = 0
         header = self.build_rtp_header()
         left_space = self.mtu_size - len(header)
         #deal with fu_a
         if len(self.left_nal) != 0:
-            (consume_size,payload) = self.build_fu_a_payload(self.left_nal,left_space,0)
+            (consume_size,payload) = self.build_fu_a_payload(self.left_nal, left_space, 0)
             self.left_nal = self.left_nal[consume_size:]
             return header + payload
         #deal with new nal
@@ -115,6 +119,7 @@ class packet:
         return (left_space,payload)
         
     def build_nor_payload(self,nal):
+        self.packetLog.LogStr('nor consume size ' + str(len(nal.video_byte)))
         return nal.video_byte
 
     def build_rtp_header(self):

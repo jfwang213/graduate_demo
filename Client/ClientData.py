@@ -10,12 +10,10 @@ from socket import *
 from ofdm.ofdm_rx import ofdm_rx
 
 from SVCPacket.src.packetization.unpacket import unpacket
-from SVCPacket.src.utils import log
 class ClientData(object):
 
     def __init__(self, dataWidth, dqID):
-        log.log_start(1) 
-        self.unpacket = unpacket(0)
+        self.unpacket = unpacket()
         self.svcProcess = None
         self.dqID = dqID
         self.startSVCPlayer()
@@ -56,8 +54,9 @@ class ClientData(object):
         if ok:
             if pktno in self.pktNoSet:
                 return 
-            print pktno
             self.okPacketNum += 1
+            if self.okPacketNum % 100 == 0:
+                print pktno
             if (pktno < self.lastOkPktno):
                 self.log.write("pkt order is not right after " + str(self.lastOkPktno) + " receive " + str(pktno) + '\n')
                 return 

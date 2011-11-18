@@ -67,8 +67,9 @@ char is_end_access_unit(access_unit* paccess_unit,NAL* next_nal)
 		return 1;
 	}
 	if (plast_nal->DependencyId == next_nal->DependencyId && 
-		plast_nal->QualityId>next_nal->QualityId)
+		plast_nal->QualityId>=next_nal->QualityId)
 	{
+        // this equal is not correct for all h.264 svc code but for the situation in which one nal has one frame
 		return 1;
 	}
 	//if (plast_slice->frame_num!= pnext_slice->frame_num)

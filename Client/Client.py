@@ -51,7 +51,7 @@ class Client(object):
             dataWidth = 80
             dqID = 16
         elif width == 2:
-            dataWidth = 60
+            dataWidth = 64
             dqID = 1
         else:
             self.log.LogStr("width is error!")
