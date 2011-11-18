@@ -77,7 +77,7 @@ class ServerControl(object):
     def __init__(self):
         self.macAddress = 1 #server mac address
         self.clients = {}
-        self.ratio = 0.5
+        self.ratio = 1
         
         self.tr = transceiver(self.ReceivePacket)
         self.serverDataChannelFree = []
