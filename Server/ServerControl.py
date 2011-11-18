@@ -148,7 +148,7 @@ class ServerControl(object):
             self.DealWithFreqRelease(srcMac, packet[9:])
 
     def DealWithFreqRelease(self, srcMac, payload):
-        (reqID) = struct.unpack("!I", payload[0:4])
+        (reqID) = struct.unpack("!I", payload[0:4])[0]
         client = self.GetOneClient(srcMac)
         if client != None:
             clientReq = client.GetOneReq(reqID)
@@ -156,7 +156,7 @@ class ServerControl(object):
                 dataChannel = clientReq.dataChannel
                 self.EndDataChannel(dataChannel)
                 # free data channel
-                self.serverDataChannelFreq.append(dataChannel)
+                self.serverDataChannelFree.append(dataChannel)
                 client.RemoveOneReq(reqID)
         # if the release has been received before, still send the release ack 
         sendContent = struct.pack("!IIBI", self.macAddress, srcMac, FreqReleaseACKCom, reqID)
@@ -190,6 +190,7 @@ class ServerControl(object):
         self.StartDataChannel(clientReq.dataChannel)
 
     def StartDataChannel(self, channelConn):
+        print "start data channel"
         content = struct.pack("!BB", 9, STARTSEND) #len commandType:start
         content += struct.pack("!ff", 0, 0) #midFreq freqWidth
         channelConn.send(content)
@@ -199,6 +200,7 @@ class ServerControl(object):
         channelConn.send(content)
 
     def EndDataChannel(self, channelConn):
+        print "end data channel"
         content = struct.pack("!BB", 1, ENDSEND)
         channelConn.send(content)
 
