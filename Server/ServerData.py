@@ -25,6 +25,7 @@ class ServerDataChannel(object):
         self.tx = None
 
     def StartSend(self, width, dqID):
+        print "width %f dqID %d" % (width, dqID)
         self.pack = packet.packet(self.fileName, 400, 177, dqID, 0)
         dataWidth = 80
         if width < 1.1:
@@ -42,8 +43,8 @@ class ServerDataChannel(object):
                 print pktno, ' ' ,len(one_packet)
             one_packet = struct.pack("!H", pktno) + one_packet
             self.tx.send_pkt(one_packet)
-            if pktno < 20 or pktno % 3 == 0:
-                self.tx.send_pkt(one_packet)
+            #if pktno < 20 or pktno % 3 == 0:
+            self.tx.send_pkt(one_packet)
             one_packet = self.pack.get_one_packet()
 
         self.tx.send_pkt(eof=True)
@@ -112,6 +113,7 @@ class ServerData(object):
             self.sock.send(content)
         self.sock.close()
         self.sock = None
+        self.serverDataChannel.StopSend()
             
 
 if __name__ == '__main__':
