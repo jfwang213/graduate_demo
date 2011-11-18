@@ -222,3 +222,6 @@ class ServerControl(object):
         self.notQuit = False
         self.listenDataChannelThread.join()
 
+    def SetRatio(self, ratio):
+        print "set ratio to %f" % ratio
+        self.ratio = ratio

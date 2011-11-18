@@ -15,6 +15,10 @@ def main():
                 print "end: stop the server"
                 print "help: show this message"
                 pass
+            elif command == "setratio":
+                ratioStr = raw_input("ratio is:")
+                ratio = float(ratioStr)
+                server.SetRatio(ratio)
     except KeyboardInterrupt:
         server.Stop()
 
