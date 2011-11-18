@@ -6,17 +6,17 @@ from gmsk.transceiver import transceiver
 import time
 import struct
 
-FreqRequest = 1
-FreqAssign = 2
-FreqRelease = 3
-FreqReleaseACK = 4
+FreqRequestCom = 1
+FreqAssignCom = 2
+FreqReleaseCom = 3
+FreqReleaseACKCom = 4
 class FreqRequest(object):
     def __init__(self, requestID, freqWidth):
         self.requestID = requestID;
         self.freqWidth = freqWidth
 
     def pack(self):
-        content = struct.pack("!BIf", FreqRequest, self.requestID, self.freqWidth)
+        content = struct.pack("!BIf", FreqRequestCom, self.requestID, self.freqWidth)
         return content
 
 class ClientControl(object):
@@ -39,18 +39,18 @@ class ClientControl(object):
         if dstMac != self.macAddress:
             print "receive others' packet"
             return
-        if packetType == FreqAssign:#freqAssign
-            reqID = struct.unpack("!I", packet[9:13])
+        if packetType == FreqAssignCom:#freqAssign
+            reqID = struct.unpack("!I", packet[9:13])[0]
             if reqID == self.requestID:
                 self.DealWithFreqAssign(packet[9:])
             else:
-                print "wrong request id for freq assign packet"
-        elif packetType == FreqReleaseACK:
-            reqID = struct.unpack("!I", packet[9:13])
+                print "wrong request id %d for freq assign packet, should be %d" % (reqID, self.requestID)
+        elif packetType == FreqReleaseACKCom:
+            reqID = struct.unpack("!I", packet[9:13])[0]
             if reqID == self.requestID:
                 self.freqReleaseACKCB(packet[9:])
             else:
-                print "wrong request id for release ack packet"
+                print "wrong request id %d for release ack packet, should be %d" % (reqID, self.requestID)
         else:
             print "wrong packetType %d" % packetType
 
@@ -89,8 +89,9 @@ class ClientControl(object):
         self.tr.send_pkt(sendContent)
 
     def sendFreqRelease(self):
+        dstMac = 1 #server macAddress
         sendContent = struct.pack("!II", self.macAddress, dstMac)
-        sendContent += struct.pack("!BI", FreqRelease, self.requestID)
+        sendContent += struct.pack("!BI", FreqReleaseCom, self.requestID)
 
         self.tr.send_pkt(sendContent)
         

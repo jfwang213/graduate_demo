@@ -17,7 +17,7 @@ class ClientData(object):
         log.log_start(1) 
         self.unpacket = unpacket(0)
         self.svcProcess = None
-        #self.startSVCPlayer()
+        self.startSVCPlayer()
         self.okPacketNum = 0
         
         time.sleep(2)

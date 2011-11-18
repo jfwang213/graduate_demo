@@ -23,7 +23,7 @@ class Client(object):
         self.ctlChannel = None
         self.ctlChannel = ClientControl(2, self.freqAssignCB, self.freqReleaseACKCB)
         self.stateLock = threading.Lock()
-        self.state = IDLE
+        self.state = Idle
         self.log = Log('ClientLog.txt')
         pass
 
@@ -54,6 +54,7 @@ class Client(object):
         self.stateLock.release()
 
     def freqReleaseACKCB(self, payload):
+        print "receive freq release ack"
         self.stateLock.acquire()
         if self.state == FreqRelease:
             self.endCtlChannel()
@@ -71,6 +72,7 @@ class Client(object):
                     self.sendCtlChannelRequest()
                     self.state = WaitAssign
                     self.freqReqTimer = Timer(TimerDuration, self.freqReqTimeoutCB)
+                    self.freqReqTimer.start()
                 self.stateLock.release()
             elif command == 'end':
                 self.stateLock.acquire()
@@ -87,6 +89,7 @@ class Client(object):
                 self.state = FreqRelease
                 self.stateLock.release()
                 self.freqReleaseTimer = Timer(TimerDuration, self.freqReleaseTimeoutCB)
+                self.freqReleaseTimer.start()
             elif command == 'quit':
                 self.stateLock.acquire()
                 if self.state == Idle:
@@ -100,29 +103,35 @@ class Client(object):
                 print "help: show this message"
                 
     def freqReqTimeoutCB(self):
+        print "freq request timeout"
         self.stateLock.acquire()
         if self.state == WaitAssign:
             self.sendCtlChannelRequest()
             self.freqReqTimer = Timer(TimerDuration, self.freqReqTimeoutCB)
+            self.freqReqTimer.start()
         self.stateLock.release()
 
     def freqReleaseTimeoutCB(self):
+        print "freq release timeout"
         self.stateLock.acquire()
         if self.state == FreqRelease:
             self.ctlChannel.sendFreqRelease()
             self.freqReleaseTimer = Timer(TimerDuration, self.freqReleaseTimeoutCB)
+            self.freqReleaseTimer.start()
+        self.stateLock.release()
+
     def freqAssignCB(self, width): #1 is big 2 is small
         if width == 1:
-            self.freqAssignThread = threading.Thread(Target=self.freqAssignThreadCB, args=[width])
-            self.freqAssignThread.start()
+            self.stateLock.acquire()
+            if self.state == WaitAssign:
+                self.freqAssignThread = threading.Thread(target=self.freqAssignThreadCB, args=[width])
+                self.freqAssignThread.start()
+                self.state = GetFreq
+            self.stateLock.release()
         else:
             self.startDataChannel()
 
     def startCtlChannel(self):
-        if self.dataChannel:
-            self.endDataChannel()
-        if not self.ctlChannel:
-
         print "start ctl channel"
         self.ctlChannel.construct()
         self.ctlChannel.start()
