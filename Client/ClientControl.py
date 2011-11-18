@@ -57,7 +57,11 @@ class ClientControl(object):
     def DealWithFreqAssign(self, payload):
         (reqID, midFreq, freqWidth) = struct.unpack("!Iff", payload[0:12])
         print "receive freq assign packet reqID %d midFreq %f freqWidth %f" % (reqID, midFreq, freqWidth)
-        self.channelAssignCB(1)
+        if freqWidth > 1.1:
+            width = 1
+        else:
+            width = 2
+        self.channelAssignCB(width)
 
     def start(self):
         print "start client control"
@@ -81,7 +85,7 @@ class ClientControl(object):
             self.tr = None
         
     def sendFreqReq(self):
-        freqReq = FreqRequest(self.requestID, 1)
+        freqReq = FreqRequest(self.requestID, 1.3)
         dstMac = 1 #server macAddress
         sendContent = struct.pack("!II", self.macAddress, dstMac)
         sendContent += freqReq.pack()

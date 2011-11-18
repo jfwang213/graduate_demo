@@ -27,10 +27,10 @@ class Client(object):
         self.log = Log('ClientLog.txt')
         pass
 
-    def startDataChannel(self):
+    def startDataChannel(self, dqID):
         self.log.LogStr("start data channel")
 
-        self.dataChannel = ClientData()
+        self.dataChannel = ClientData(dqID)
         self.dataChannel.start()
 
     def endDataChannel(self):
@@ -44,12 +44,20 @@ class Client(object):
             self.log.LogStr("endDataChannel but dataChannel is none")
 
     def freqAssignThreadCB(self, width):
-        self.log.LogStr("freqAssignThread call callback")
+        self.log.LogStr("freqAssignThread call callback width %d" % width)
         self.stateLock.acquire()
         self.log.LogStr("the state is %d" % (self.state))
+        if width == 1:
+            dqID = 16
+        elif width == 2:
+            dqID = 1
+        else:
+            self.log.LogStr("width is error!")
+            return
+
         if self.state == GetFreq:
             self.endCtlChannel()
-            self.startDataChannel()
+            self.startDataChannel(dqID)
             self.state = StartData
         self.stateLock.release()
 
@@ -122,15 +130,12 @@ class Client(object):
         self.stateLock.release()
 
     def freqAssignCB(self, width): #1 is big 2 is small
-        if width == 1:
-            self.stateLock.acquire()
-            if self.state == WaitAssign:
-                self.freqAssignThread = threading.Thread(target=self.freqAssignThreadCB, args=[width])
-                self.freqAssignThread.start()
-                self.state = GetFreq
-            self.stateLock.release()
-        else:
-            self.startDataChannel()
+        self.stateLock.acquire()
+        if self.state == WaitAssign:
+            self.freqAssignThread = threading.Thread(target=self.freqAssignThreadCB, args=[width])
+            self.freqAssignThread.start()
+            self.state = GetFreq
+        self.stateLock.release()
 
     def startCtlChannel(self):
         print "start ctl channel"

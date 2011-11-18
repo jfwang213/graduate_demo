@@ -12,10 +12,10 @@ import struct
 from socket import *
 
 class TestServer:
-    def __init__(self, client):
+    def __init__(self, client, dqID):
         self.fileName = "../Server/svc.file"
         log.log_start(1)
-        self.pack = packet.packet(self.fileName, 400, 177, 0)
+        self.pack = packet.packet(self.fileName, 400, 177, dqID, 0)
         self.client = client
 
     def startSend(self):
@@ -45,11 +45,11 @@ class TestServer:
 
 
 class TestClient:
-    def __init__(self):
+    def __init__(self, dqID):
        
         log.log_start(1) 
         self.unpacket = unpacket.unpacket(0)
-        #self.startSVCPlayer()
+        self.startSVCPlayer()
         self.okPacketNum = 0
         
         time.sleep(2)
@@ -60,7 +60,7 @@ class TestClient:
 
     def startSVCPlayer(self):
         filePath = '../error-conceal/Libs/SVC/bin/svc'
-        svcProcess = subprocess.Popen([filePath, '-network', '-layer', '16'])
+        svcProcess = subprocess.Popen([filePath, '-network', '-layer', str(dqID)])
 
 
     def initNetwork(self):
@@ -89,7 +89,8 @@ class TestClient:
         self.feedThread.start()
 
 if __name__ == '__main__':
-    client = TestClient()
-    server = TestServer(client)
+    dqID = 1
+    client = TestClient(dqID)
+    server = TestServer(client, dqID)
     client.start()
     server.startSend()

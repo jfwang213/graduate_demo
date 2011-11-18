@@ -175,7 +175,11 @@ class ServerControl(object):
             if len(self.serverDataChannelFree) == 0:
                 raise Exception("no free channel")
             dataChannel = self.serverDataChannelFree.pop()
-            clientReq.PutResult(2450, freqWidth * self.ratio, dataChannel)
+            if self.ratio > 0.7:
+                freqWidth = 1.3
+            else:
+                freqWidth = 1
+            clientReq.PutResult(2450, freqWidth, dataChannel)
             client.PutOneReq(clientReq)
 
         # if it is not the first request, end the server data channel
@@ -187,14 +191,14 @@ class ServerControl(object):
         self.tr.send_pkt(sendContent)
 
         # start the data channel
-        self.StartDataChannel(clientReq.dataChannel)
+        self.StartDataChannel(clientReq.dataChannel, clientReq.allocFreqWidth)
 
-    def StartDataChannel(self, channelConn):
+    def StartDataChannel(self, channelConn, freqWidth):
         print "start data channel"
         content = struct.pack("!BB", 9, STARTSEND) #len commandType:start
-        content += struct.pack("!ff", 0, 0) #midFreq freqWidth
+        content += struct.pack("!ff", 2.45, freqWidth) #midFreq freqWidth
         channelConn.send(content)
-
+        
     def StopDataChannel(self, channelConn):
         content = struct.pack("!BB", 1, STOPSEND)
         channelConn.send(content)

@@ -4,7 +4,8 @@
 
 typedef struct {
 	PyObject_HEAD
-	PyObject* byte_array_nal;
+	PyObject*   byte_array_nal;
+    int         nal_dqID; 
 }py_nal_object;
 extern PyTypeObject py_nal_type;
 

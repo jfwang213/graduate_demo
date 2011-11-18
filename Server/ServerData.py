@@ -24,9 +24,12 @@ class ServerDataChannel(object):
         self.pack = None
         self.tx = None
 
-    def StartSend(self):
-        self.pack = packet.packet(self.fileName, 400, 177, 0)
-        self.tx = ofdm_tx.ofdm_tx('2.45G', 128, 80, 32, 64)
+    def StartSend(self, width, dqID):
+        self.pack = packet.packet(self.fileName, 400, 177, dqID, 0)
+        dataWidth = 80
+        if width < 1.1:
+            dataWidth = 60
+        self.tx = ofdm_tx.ofdm_tx('2.45G', 128, dataWidth, 32, 64)
 
         self.SendWarmUp()
         
@@ -82,10 +85,14 @@ class ServerData(object):
             if commandType == STARTSEND: #start
                 print "receive startsend command"
                 content = RecvFixLen(self.sock, 8)
-                (midFreq, FreqWidth) = struct.unpack('!ff', content[0:8])
+                (midFreq, FreqWidth) = struct.unpack('!ff', content[0:12])
                 self.serverDataChannel.stopSend = False
                 time.sleep(10)
-                sendThread = threading.Thread(target=self.serverDataChannel.StartSend)
+                if FreqWidth < 1.1:
+                    dqID = 1
+                else:
+                    dqID = 16
+                sendThread = threading.Thread(target=self.serverDataChannel.StartSend, args=[FreqWidth, dqID])
                 sendThread.start()
             elif commandType == STOPSEND: #stop
                 print "receive stopsend command"

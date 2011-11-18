@@ -7,6 +7,8 @@
 static PyMemberDef py_nal_members[] = {
 	{"video_byte", T_OBJECT_EX, offsetof(py_nal_object, byte_array_nal), 0,
 	"video content"},
+    {"nal_dqID", T_INT, offsetof(py_nal_object, nal_dqID), 0,
+	"video content"},
 	{NULL}  /* Sentinel */
 };
 
@@ -17,6 +19,7 @@ py_nal_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 	self = (py_nal_object*)type->tp_alloc(type,0);
 	if (NULL != self)
 	{
+        self->nal_dqID = 0;
 		self->byte_array_nal=PyString_FromStringAndSize("",0);
 		if (NULL == self->byte_array_nal)
 		{
@@ -32,6 +35,7 @@ py_nal_object* c_build_nal(NAL* nal)
 	py_nal_object* res = (py_nal_object*)py_nal_new(&py_nal_type,NULL,NULL);
 	if (NULL != res)
 	{
+        res->nal_dqID = nal->DqId;
 		c_init_nal(res,nal->prbsp_memory,nal->nal_byte_size);
 	}
 	return res;

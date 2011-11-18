@@ -13,7 +13,7 @@ from SVCPacket.src.packetization.unpacket import unpacket
 from SVCPacket.src.utils import log
 class ClientData(object):
 
-    def __init__(self):
+    def __init__(self, dqID):
         log.log_start(1) 
         self.unpacket = unpacket(0)
         self.svcProcess = None
@@ -28,6 +28,8 @@ class ClientData(object):
         self.pktNoSet = set([0])
         self.lastOkPktno = 0
         self.stopFeed = False
+
+        self.dqID = dqID
         print 'init client ok!'
 
         #init log correct receive packet
@@ -35,7 +37,7 @@ class ClientData(object):
         self.log = file('client.log', 'w')
     def startSVCPlayer(self):
         filePath = '../error-conceal/Libs/SVC/bin/svc'
-        self.svcProcess = subprocess.Popen([filePath, '-network', '-layer', '16'])
+        self.svcProcess = subprocess.Popen([filePath, '-network', '-layer', str(self.dqID)])
     
     def stopSVCPlayer(self):
         if self.svcProcess:

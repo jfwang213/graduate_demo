@@ -3,7 +3,7 @@ import struct
 import pdb
 from SVCPacket.src.utils import log
 class packet:
-    def __init__(self,file_name,mtu_size,ssrc,log_id=-1):
+    def __init__(self, file_name, mtu_size, ssrc, dqID, log_id=-1):
         read_video.file_name = file_name
         read_video.init_file(read_video.file_name)
         self.mtu_size = mtu_size
@@ -16,9 +16,19 @@ class packet:
         self.log_id = log_id
         self.nal_num = 0
         self.accessUnitID = 0
+        self.dqID = dqID
         
     def end(self):
         read_video.close_file()
+
+    def extractNalsBydqID(self, nals):
+        res = []
+        for nal in nals:
+            log.log_str('get one nal with dqID %d' % nal.nal_dqID, self.log_id)
+            if nal.nal_dqID <= self.dqID:
+                res.append(nal)
+        return res
+
     def get_one_packet(self):
         consume_nal_num = 0
         header = self.build_rtp_header()
@@ -29,7 +39,7 @@ class packet:
             self.left_nal = self.left_nal[consume_size:]
             return header + payload
         #deal with new nal
-        if len(self.nals) == 0:
+        while len(self.nals) == 0:
             log.log_str('read one access unit access unit id ' +
                 str(self.accessUnitID), self.log_id)
             self.accessUnitID += 1
@@ -38,11 +48,12 @@ class packet:
                 return None
             log.log_str('access unit id ' + str(self.accessUnitID) + ' nals number: ' + str(len(au.nals)),
                 self.log_id)
-            self.nal_num += len(au.nals)
-            self.nals += au.nals
+            self.nals += self.extractNalsBydqID(au.nals)
+            self.nal_num = len(self.nals)
+
         curr_nal = self.nals[0]
         if len(curr_nal.video_byte) > left_space:
-            log.log_str('one large nal: nal size '+str(len(curr_nal.video_byte)),self.log_id)
+            log.log_str('one large nal: nal size '+str(len(curr_nal.video_byte)), self.log_id)
             self.left_nal = curr_nal.video_byte
             self.first_byte = struct.unpack('!B',self.left_nal[0:1])[0]
             (consume_size,payload) = self.build_fu_a_payload(self.left_nal,left_space,1)
