@@ -92,6 +92,9 @@ class ServerControl(object):
         self.channelRecvThread = threading.Thread(target=self.RecvDataChannelThreadCB)
         self.channelRecvThread.start()
 
+    def GetFreeDataChannelNumber(self):
+        return len(self.serverDataChannelFree)
+
     def RecvDataChannelThreadCB(self):
         while self.notQuit:
             rlist, wlist, xlist = select.select(self.serverDataChannelFree, [], [], 1)
