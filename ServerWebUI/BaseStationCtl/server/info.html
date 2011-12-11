@@ -1,0 +1,39 @@
+<html>
+<head>
+    <meta charset=UTF-8></meta>
+    <title>基站情况</title>
+    <link href="/css/BaseStationCtl.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<header>
+<h1>面向带宽可调应用的频谱分配算法基站信息</h1>
+</header>
+<div class="baseInfo">
+    <h2>基本信息:</h2>
+    <p>空闲数据信道数目{{freeDataChannelNumber}}</p>
+    <p>活跃请求数目 {{clients|length}}</p>
+</div>
+
+{% if clients %}
+<div id="clientAllInfo">
+<table>
+    <th>
+        <td>MAC地址</td>
+        <td>请求ID</td>
+    </th>
+    {% for client in clients %}
+    <tr>
+        <td>{{ client.mac }}</td>
+        <td>{{ client.reqID }}</td>
+    </tr>
+    {% endfor %}
+</table>
+</div>
+{% endif %}
+
+<footer>
+    <p>&copy;2011 Jianfei Wang</p>
+</footer>
+</body>
+</html>
+
