@@ -14,6 +14,23 @@
     <p>活跃请求数目 {{clients|length}}</p>
 </div>
 
+
+<div id="FakeClientInfo">
+<table>
+    <th>
+        <td>项目名称</td>
+        <td>值</td>
+    </th>
+    <tr>
+        <td>估计的平均服务时间</td>
+        <td>{{ averSerTime }}</td>
+    </tr>
+    <tr>
+        <td>估计的到达速率</td>
+        <td>{{ inputrate }}<td>
+    </tr>
+
+</div>
 {% if clients %}
 <div id="clientAllInfo">
 <table>

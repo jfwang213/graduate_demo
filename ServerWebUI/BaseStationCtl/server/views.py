@@ -10,10 +10,13 @@ the Command between server and server web ui
 GetFreeDataChannel = 1
 GetAllActiveClient = 2
 GetOneActiveClient = 3
+GetEstParam = 4
+SetClientParam = 5
 
 GiveAllActiveClient = 101
 GiveOneActiveClient = 102
 GiveFreeDataChannel = 103
+GiveEstParam = 104
 
 End = 254
 Error = 255
@@ -57,6 +60,15 @@ def GetFreeDataChannelNumber(socket):
         number = RecvFixLen(socket, 1)
         number = struct.unpack("!B", number)[0]
         return number
+def GetEstInfomation(socket):
+    content = struct.pack("!B", GetEstParam)
+    socket.send(content)
+    command = RecvFixLen(socket, 9)
+    (command, averSerTime, inputrate) = struct.unpack("!Bff", command)
+    if command != GiveEstParam:
+        return None
+    else:
+        return (averSerTime, inputrate)
 
 def info(request):
     sock = socket(AF_INET, SOCK_STREAM)
@@ -68,9 +80,10 @@ def info(request):
     if serverOn:
         freeDataChannelNumber = GetFreeDataChannelNumber(sock)
         clients = GetAllActiveClientInfo(sock)
+        (averSerTime, inputrate) = self.GetEstInformation(sock)
         EndChat(sock)
         sock.close()
-        return render_to_response('server/info.html', {'freeDataChannelNumber': freeDataChannelNumber, 'clients': clients})
+        return render_to_response('server/info.html', {'freeDataChannelNumber': freeDataChannelNumber, 'clients': clients, 'averSerTime': averSerTime, 'inputrate', inputrate})
     else:
         return HttpResponse("The server is Down!")
 
