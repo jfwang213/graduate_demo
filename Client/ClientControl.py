@@ -59,8 +59,10 @@ class ClientControl(object):
         print "receive freq assign packet reqID %d midFreq %f freqWidth %f" % (reqID, midFreq, freqWidth)
         if freqWidth > 1.1:
             width = 1
-        else:
+        elif freqWidth > 0.9:
             width = 2
+        else:
+            width = 3
         self.channelAssignCB(width)
 
     def start(self):

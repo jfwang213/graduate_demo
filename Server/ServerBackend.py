@@ -89,6 +89,7 @@ class ServerBackend(object):
         if self.typeID == typeID:
             return
         self.typeID = typeID
+        self.ctlChannel.typeID = typeID
         if typeID == 1:
             self.clientGenerate.SetParam(3, 62)
         elif typeID == 2:

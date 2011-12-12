@@ -178,10 +178,12 @@ class ServerControl(object):
             if len(self.serverDataChannelFree) == 0:
                 raise Exception("no free channel")
             dataChannel = self.serverDataChannelFree.pop()
-            if self.ratio > 0.7:
+            if self.typeID == 1:
                 freqWidth = 1.3
-            else:
+            elif self.typeID == 2:
                 freqWidth = 1
+            elif self.typeID == 3:
+                freqWidth = 0.7
             clientReq.PutResult(2450, freqWidth, dataChannel)
             client.PutOneReq(clientReq)
 

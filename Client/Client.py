@@ -54,8 +54,8 @@ class Client(object):
             dataWidth = 64
             dqID = 1
         else:
-            self.log.LogStr("width is error!")
-            return
+            dataWidth = 48
+            dqID = 0
 
         if self.state == GetFreq:
             self.endCtlChannel()
