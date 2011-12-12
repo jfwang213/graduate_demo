@@ -218,7 +218,7 @@ class ServerControl(object):
         self.listenDataChannelThread.start()
 
     def Stop(self):
-        print "Stop Server"
+        print "Stop Server Control"
         self.tr.send_pkt(eof=True)
         self.tr.stop()
         self.tr.wait()

@@ -3,72 +3,33 @@ from django.shortcuts import render_to_response
 from django.http import HttpResponse
 from socket import *
 import struct
+from utils import *
 
-"""
-the Command between server and server web ui
-"""
-GetFreeDataChannel = 1
-GetAllActiveClient = 2
-GetOneActiveClient = 3
-GetEstParam = 4
-SetClientParam = 5
-
-GiveAllActiveClient = 101
-GiveOneActiveClient = 102
-GiveFreeDataChannel = 103
-GiveEstParam = 104
-
-End = 254
-Error = 255
-def RecvFixLen(sock, length):
-    res = ''
-    while length > 0:
-        content = sock.recv(length)
-        length -= len(content)
-        res += content
-    return res
-
-def EndChat(socket):
-    content = struct.pack("!B", End)
-    socket.send(content)
-
-def GetAllActiveClientInfo(socket):
-    content = struct.pack("!B", GetAllActiveClient)
-    socket.send(content)
-    command = RecvFixLen(socket, 1)
-    command = struct.unpack("!B", command)[0]
-    if command != GiveAllActiveClient:
-        return None
+def GetFreqLine():
+    resultFile = file("/root/graduate_demo/ServerWebUI/freqResult.txt")
+    numbers = []
+    while True:
+        line = resultFile.readline()
+        if len(line) == 0:
+            break
+        number = float(line[0:-1]) #remove enter
+        numbers.append(number)
+    resultFile.close()
+    maxNum = 100
+    if maxNum > len(numbers):
+        startNum = 0
     else:
-        number = RecvFixLen(socket, 4)
-        number = struct.unpack("!I", number)[0]
-        content = RecvFixLen(socket, 5*number)
-        res = []
-        for i in range(number):
-            (mac, reqID) = struct.pack("!BI", content[i*5:i*5+5])
-            res.append({'mac':mac, 'reqID':reqID})
-        return res
+        startNum = len(numbers)-maxNum
 
-def GetFreeDataChannelNumber(socket):
-    content = struct.pack("!B", GetFreeDataChannel)
-    socket.send(content)
-    command = RecvFixLen(socket, 1)
-    command = struct.unpack("!B", command)[0]
-    if command != GiveFreeDataChannel:
-        return None
-    else:
-        number = RecvFixLen(socket, 1)
-        number = struct.unpack("!B", number)[0]
-        return number
-def GetEstInfomation(socket):
-    content = struct.pack("!B", GetEstParam)
-    socket.send(content)
-    command = RecvFixLen(socket, 9)
-    (command, averSerTime, inputrate) = struct.unpack("!Bff", command)
-    if command != GiveEstParam:
-        return None
-    else:
-        return (averSerTime, inputrate)
+    result = "["
+    while startNum < len(numbers):
+        #result.append(numbers[startNum])
+        result += str(numbers[startNum]) + ','
+        startNum += 1
+    return result + ']'
+
+def recentFreqUsed(request):
+    return HttpResponse(GetFreqLine())
 
 def info(request):
     sock = socket(AF_INET, SOCK_STREAM)
@@ -78,12 +39,24 @@ def info(request):
     except:
         serverOn = False
     if serverOn:
+        if 'inputtype' in request.GET:
+            inputtype = request.GET['inputtype']
+            if inputtype == '1':
+                SetClientParam(sock, 1)
+            elif inputtype == '2':
+                SetClientParam(sock, 2)
+            elif inputtype == '3':
+                SetClientParam(sock, 3)
         freeDataChannelNumber = GetFreeDataChannelNumber(sock)
         clients = GetAllActiveClientInfo(sock)
-        (averSerTime, inputrate) = self.GetEstInformation(sock)
+        (averSerTime, inputrate) = GetEstInformation(sock)
+        (maxFreq, leftFreq, nowSatis, activeNum, servedNum, inputtype) = GetServerInfo(sock)
+        freqRatio = (maxFreq-leftFreq)/maxFreq * 100
+        (cliAverSerTime, cliInputRate) = GetClientGenerateInfo(sock)
         EndChat(sock)
         sock.close()
-        return render_to_response('server/info.html', {'freeDataChannelNumber': freeDataChannelNumber, 'clients': clients, 'averSerTime': averSerTime, 'inputrate', inputrate})
+        chartStr = GetFreqLine()
+        return render_to_response('server/info.html', {'freeDataChannelNumber': freeDataChannelNumber, 'clients': clients, 'averSerTime': averSerTime, 'inputrate':inputrate, 'inputtype':str(inputtype), 'maxFreq':maxFreq, 'leftFreq':leftFreq, 'nowSatis':nowSatis, 'activeNum':activeNum, 'freqRatio':freqRatio, 'servedNum':servedNum, 'cliAverSerTime':cliAverSerTime, 'cliInputRate':cliInputRate, 'chartStr':chartStr})
     else:
         return HttpResponse("The server is Down!")
 
