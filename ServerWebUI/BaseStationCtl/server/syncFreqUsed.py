@@ -13,11 +13,14 @@ def syncUsedFreq():
             continue
         break
     resultFile = file("freqResult.txt", 'w')
-    while True:
-        (maxFreq, leftFreq, nowSatis, activeNum, servedNum,a) = GetServerInfo(sock)
-        resultFile.write(str((maxFreq-leftFreq)/maxFreq) + '\n')
-        resultFile.flush()
-        time.sleep(1)
+    try:
+        while True:
+            (maxFreq, leftFreq, nowSatis, activeNum, servedNum,a) = GetServerInfo(sock)
+            resultFile.write(str((maxFreq-leftFreq)/maxFreq) + '\n')
+            resultFile.flush()
+            time.sleep(1)
+    except:
+        pass
     resultFile.close()
     EndChat(sock)
     sock.close()
