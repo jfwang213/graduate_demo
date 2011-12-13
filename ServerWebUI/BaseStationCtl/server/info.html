@@ -180,11 +180,13 @@
             <tr>
                 <th>MAC地址</th>
                 <th>请求ID</th>
+                <th>频谱宽度</th>
             </tr>
             {% for client in clients %}
             <tr>
                 <td>{{ client.mac }}</td>
                 <td>{{ client.reqID }}</td>
+                <td>{{ client.width }}</td>
             </tr>
             {% endfor %}
         </table>

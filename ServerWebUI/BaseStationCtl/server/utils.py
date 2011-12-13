@@ -42,11 +42,11 @@ def GetAllActiveClientInfo(socket):
     else:
         number = RecvFixLen(socket, 4)
         number = struct.unpack("!I", number)[0]
-        content = RecvFixLen(socket, 5*number)
+        content = RecvFixLen(socket, 9*number)
         res = []
         for i in range(number):
-            (mac, reqID) = struct.unpack("!BI", content[i*5:i*5+5])
-            res.append({'mac':mac, 'reqID':reqID})
+            (mac, reqID, width) = struct.unpack("!BIf", content[i*9:i*9+9])
+            res.append({'mac':mac, 'reqID':reqID, 'width':width})
         return res
 
 def GetFreeDataChannelNumber(socket):

@@ -114,7 +114,7 @@ class ServerBackend(object):
                 for clientMac, client in clients.items():
                     for reqID, req in client.reqs.items():
                         reqNumber += 1
-                        content += struct.pack("!BI", clientMac, reqID)
+                        content += struct.pack("!BIf", clientMac, reqID, req.allocFreqWidth)
                 content = struct.pack("!BI", GiveAllActiveClient, reqNumber) + content
             elif command == GetOneActiveClient:
                 print "Get One Active Client"
