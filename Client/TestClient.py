@@ -12,13 +12,14 @@ from socket import *
 
 class TestServer:
     def __init__(self, client, dqID):
+        self.dqID = dqID
         self.fileName = "../Server/svc.file"
         self.pack = packet.packet(self.fileName, 400, 177, dqID)
         self.client = client
         self.serverLog = Log("serverLog.txt")
 
     def startSend(self):
-        lossFile = file("lostPacketNo.txt")
+        lossFile = file("lost_" + str(self.dqID) + ".txt")
         lineContent = lossFile.readline()
         if lineContent:
             lossPktNo = int(lineContent)
@@ -26,7 +27,8 @@ class TestServer:
             lossPktNo = -1
         one_packet = self.pack.get_one_packet()
         curPktNo = 1
-        while one_packet:
+        self.bEnd = False
+        while one_packet and not self.bEnd:
             if curPktNo == lossPktNo:
                 #remove it
                 print "remove pktno ", curPktNo
@@ -42,10 +44,12 @@ class TestServer:
             curPktNo += 1
             one_packet = self.pack.get_one_packet()
             time.sleep(0.01)
-
+    def stopSend(self):
+        self.bEnd = True
 class TestClient:
     def __init__(self, dqID):
-       
+        
+        self.dqID = dqID
         self.unpacket = unpacket.unpacket()
         self.startSVCPlayer()
         self.okPacketNum = 0
@@ -55,11 +59,16 @@ class TestClient:
         self.pktNoSet = set([0])
         self.lastOkPktno = 0
         print 'init client ok!'
+        self.bEnd = False
 
     def startSVCPlayer(self):
         filePath = '../error-conceal/Libs/SVC/bin/svc'
-        svcProcess = subprocess.Popen([filePath, '-network', '-layer', str(dqID)])
+        self.svcProcess = subprocess.Popen([filePath, '-network', '-layer', str(self.dqID)])
 
+    def stopSVCPlayer(self):
+        if self.svcProcess:
+            self.svcProcess.kill()
+            self.svcProcess = None
 
     def initNetwork(self):
         port = 12345
@@ -71,7 +80,13 @@ class TestClient:
         self.unpacket.put_one_rtp(packet)
 
     def feedPlayer(self):
-        while True:
+        while not self.bEnd:
+            if self.dqID == 16:
+                time.sleep(0.01)
+            elif self.dqID == 1:
+                time.sleep(0.015)
+            else:
+                time.sleep(0.02)
             nal = self.unpacket.get_one_nal()
             if nal == '':
                 time.sleep(0.1)
@@ -86,6 +101,26 @@ class TestClient:
         self.initNetwork()
         self.feedThread.start()
 
+    def stop(self):
+        self.bEnd = True
+        self.sock.close()
+
+
+class FakeClientData(object):
+    def __init__(self, dqID):
+        self.client = TestClient(dqID)
+        self.server = TestServer(self.client, dqID)
+
+    def StartTestClient(self):
+        self.client.start()
+        self.serverThread = threading.Thread(target = self.server.startSend)
+        time.sleep(7)
+        self.serverThread.start()
+
+    def EndTestClient(self):
+        self.client.stop()
+        self.client.stopSVCPlayer()
+        self.server.stopSend()
 if __name__ == '__main__':
     dqID = 16
     client = TestClient(dqID)

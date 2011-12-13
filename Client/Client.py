@@ -8,7 +8,8 @@ import threading
 import time
 from threading import Timer
 from Utils.Log import Log
-
+from TestClient import FakeClientData
+fake = 1
 Idle = 0
 WaitAssign = 1
 GetFreq = 2
@@ -41,7 +42,11 @@ class Client(object):
             del self.dataChannel
             self.dataChannel = None
         else:
-            self.log.LogStr("endDataChannel but dataChannel is none")
+            if fake:
+                self.fakeClientData.EndTestClient()
+                self.fakeClientData = None
+            else:
+                self.log.LogStr("endDataChannel but dataChannel is none")
 
     def freqAssignThreadCB(self, width):
         self.log.LogStr("freqAssignThread call callback width %d" % width)
@@ -59,7 +64,11 @@ class Client(object):
 
         if self.state == GetFreq:
             self.endCtlChannel()
-            self.startDataChannel(dataWidth, dqID)
+            if fake:
+                self.fakeClientData = FakeClientData(dqID)
+                self.fakeClientData.StartTestClient()
+            else:
+                self.startDataChannel(dataWidth, dqID)
             self.state = StartData
         self.stateLock.release()
 
