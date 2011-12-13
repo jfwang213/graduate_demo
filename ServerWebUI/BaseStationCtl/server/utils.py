@@ -45,7 +45,7 @@ def GetAllActiveClientInfo(socket):
         content = RecvFixLen(socket, 5*number)
         res = []
         for i in range(number):
-            (mac, reqID) = struct.pack("!BI", content[i*5:i*5+5])
+            (mac, reqID) = struct.unpack("!BI", content[i*5:i*5+5])
             res.append({'mac':mac, 'reqID':reqID})
         return res
 

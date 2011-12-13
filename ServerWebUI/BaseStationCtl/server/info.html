@@ -177,10 +177,10 @@
         {% if clients %}
         <div id="clientAllInfo">
         <table>
-            <th>
-                <td>MAC地址</td>
-                <td>请求ID</td>
-            </th>
+            <tr>
+                <th>MAC地址</th>
+                <th>请求ID</th>
+            </tr>
             {% for client in clients %}
             <tr>
                 <td>{{ client.mac }}</td>

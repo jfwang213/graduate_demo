@@ -108,10 +108,11 @@ class ServerBackend(object):
             elif command == GetAllActiveClient:
                 print " get all active client"
                 clients = self.ctlChannel.clients
+                print clients
                 reqNumber = 0
                 content = ''
-                for clientMac, client in clients:
-                    for reqID, req in client.reqs:
+                for clientMac, client in clients.items():
+                    for reqID, req in client.reqs.items():
                         reqNumber += 1
                         content += struct.pack("!BI", clientMac, reqID)
                 content = struct.pack("!BI", GiveAllActiveClient, reqNumber) + content
