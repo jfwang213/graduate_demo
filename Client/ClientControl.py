@@ -25,6 +25,7 @@ class ClientControl(object):
         self.requestID = 1
         self.channelAssignCB = channelAssignCB
         self.freqReleaseACKCB = freqReleaseACKCB
+        self.tr = None
 
     def __del__(self):
         print "delete client control class"

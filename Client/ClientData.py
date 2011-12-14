@@ -31,6 +31,7 @@ class ClientData(object):
 
         #init log correct receive packet
         self.correctReceivePacketLog = file("correctReceivePacket.log", "w")
+        print 'create correct file'
         self.log = file('client.log', 'w')
     def startSVCPlayer(self):
         filePath = '../error-conceal/Libs/SVC/bin/svc'

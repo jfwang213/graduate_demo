@@ -18,6 +18,7 @@ class TestServer:
         self.client = client
         self.serverLog = Log("serverLog.txt")
 
+
     def startSend(self):
         lossFile = file("lost_" + str(self.dqID) + ".txt")
         lineContent = lossFile.readline()
@@ -28,6 +29,7 @@ class TestServer:
         one_packet = self.pack.get_one_packet()
         curPktNo = 1
         self.bEnd = False
+        self.bPause = False
         while one_packet and not self.bEnd:
             if curPktNo == lossPktNo:
                 #remove it
@@ -43,9 +45,18 @@ class TestServer:
             self.serverLog.LogStr("pktNo %d len %d" % (curPktNo, len(one_packet)))
             curPktNo += 1
             one_packet = self.pack.get_one_packet()
+            while self.bPause and not self.bEnd:
+                time.sleep(0.1)
             time.sleep(0.01)
     def stopSend(self):
         self.bEnd = True
+
+    def pauseSend(self):
+        self.bPause = True
+
+    def resumeSend(self):
+        self.bPause = False
+
 class TestClient:
     def __init__(self, dqID):
         
@@ -63,7 +74,8 @@ class TestClient:
 
     def startSVCPlayer(self):
         filePath = '../error-conceal/Libs/SVC/bin/svc'
-        self.svcProcess = subprocess.Popen([filePath, '-network', '-layer', str(self.dqID)])
+        FNULL = open('/dev/null', 'w')
+        self.svcProcess = subprocess.Popen(args=[filePath, '-network', '-layer', str(self.dqID)], stdout=FNULL)
 
     def stopSVCPlayer(self):
         if self.svcProcess:
@@ -114,13 +126,19 @@ class FakeClientData(object):
     def StartTestClient(self):
         self.client.start()
         self.serverThread = threading.Thread(target = self.server.startSend)
-        time.sleep(7)
         self.serverThread.start()
 
     def EndTestClient(self):
         self.client.stop()
         self.client.stopSVCPlayer()
         self.server.stopSend()
+
+    def PauseTestClient(self):
+        self.server.pauseSend()
+
+    def ResumeTestClient(self):
+        self.server.resumeSend()
+
 if __name__ == '__main__':
     dqID = 16
     client = TestClient(dqID)
