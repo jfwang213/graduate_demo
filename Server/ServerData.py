@@ -24,6 +24,7 @@ class ServerDataChannel(object):
 
     def StartSend(self, width, dqID):
         self.stopSend = False
+        print 'start Send'
         print "width %f dqID %d" % (width, dqID)
         self.pack = packet.packet(self.fileName, 400, 177, dqID)
         #wait for client
@@ -52,7 +53,8 @@ class ServerDataChannel(object):
             #if pktno < 20 or pktno % 3 == 0:
             self.tx.send_pkt(one_packet)
             one_packet = self.pack.get_one_packet()
-
+        
+        print 'stop send ' + str(self.stopSend) + ' ' + str(one_packet)
         self.tx.send_pkt(eof=True)
         self.pack.end()
         del self.pack
@@ -61,6 +63,7 @@ class ServerDataChannel(object):
         self.tx.wait()
         del self.tx
         self.tx = None
+        print 'thread end'
 
 
     def StopSend(self):
@@ -90,6 +93,7 @@ class ServerData(object):
     def ReceiveCommand(self):
         print "waiting for receiving commands"
         while True:
+            print "waiting for receiving commands"
             content = RecvFixLen(self.sock, 2)
             (commandLen, commandType) = struct.unpack("!BB", content[0:2])
             if commandType == STARTSEND: #start
@@ -127,6 +131,8 @@ class ServerData(object):
         if self.sendThread:
             self.sendThread.join()
             self.sendThread = None
+
+        print "stop send end"
 
 if __name__ == '__main__':
     try:

@@ -295,6 +295,7 @@ char read_video_init(const char* fileName)
 	file_size = File_size(video_file);
 	buffer_free_size = BUFFER_SIZE;
 	to_read_addr = 0;
+    is_file_end = 0;
 
 	init_access_unit(next_access_unit);
 	return 1;
@@ -305,6 +306,7 @@ void close_read_video()
 {
 	if (video_file)
 	{
+        printf("close video file");
 		fclose(video_file);
 	}
 }
