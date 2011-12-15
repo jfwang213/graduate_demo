@@ -33,10 +33,13 @@ class TestServer:
         while one_packet and not self.bEnd:
             if curPktNo == lossPktNo:
                 #remove it
-                print "remove pktno ", curPktNo
+                #print "remove pktno ", curPktNo
                 lineContent = lossFile.readline()
                 if lineContent:
-                    lossPktNo = int(lineContent)
+                    try:
+                        lossPktNo = int(lineContent)
+                    except:
+                        lossPktNo = -1
                 else:
                     lossPktNo = -1
             else:
@@ -94,11 +97,11 @@ class TestClient:
     def feedPlayer(self):
         while not self.bEnd:
             if self.dqID == 16:
-                time.sleep(0.01)
+                pass
             elif self.dqID == 1:
-                time.sleep(0.015)
-            else:
                 time.sleep(0.02)
+            else:
+                time.sleep(0.035)
             nal = self.unpacket.get_one_nal()
             if nal == '':
                 time.sleep(0.1)
