@@ -37,7 +37,7 @@ class ServerDataChannel(object):
             dataWidth = 64
         elif width >= 0.6 and width <= 0.8:
             dataWidth = 48
-        self.tx = ofdm_tx.ofdm_tx('2.45G', 128, dataWidth, 32, 64)
+        self.tx = ofdm_tx.ofdm_tx('2.5G', 128, dataWidth, 32, 64)
 
         self.SendWarmUp()
         
