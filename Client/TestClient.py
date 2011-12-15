@@ -45,6 +45,12 @@ class TestServer:
             else:
                 #deliver it to client
                 self.client.receive_one_packet(one_packet)
+            if self.dqID == 16:
+                pass
+            elif self.dqID == 1:
+                time.sleep(0.01)
+            else:
+                time.sleep(0.015)
             self.serverLog.LogStr("pktNo %d len %d" % (curPktNo, len(one_packet)))
             curPktNo += 1
             one_packet = self.pack.get_one_packet()
@@ -96,12 +102,6 @@ class TestClient:
 
     def feedPlayer(self):
         while not self.bEnd:
-            if self.dqID == 16:
-                pass
-            elif self.dqID == 1:
-                time.sleep(0.02)
-            else:
-                time.sleep(0.035)
             nal = self.unpacket.get_one_nal()
             if nal == '':
                 time.sleep(0.1)
@@ -137,6 +137,7 @@ class FakeClientData(object):
         self.server.stopSend()
 
     def PauseTestClient(self):
+        print "pause client"
         self.server.pauseSend()
 
     def ResumeTestClient(self):

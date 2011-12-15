@@ -69,7 +69,7 @@ class ClientData(object):
         
     def initOfdmRx(self, dataWidth):
         print dataWidth
-        self.ofdm_rx = ofdm_rx('2.45G', 128, dataWidth, 32, 32, self.rxCallBack)
+        self.ofdm_rx = ofdm_rx('2.5G', 128, dataWidth, 32, 32, self.rxCallBack)
 
     def feedPlayer(self):
         while not self.stopFeed:

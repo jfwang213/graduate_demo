@@ -201,7 +201,7 @@ class ServerControl(object):
     def StartDataChannel(self, channelConn, freqWidth):
         print "start data channel"
         content = struct.pack("!BB", 9, STARTSEND) #len commandType:start
-        content += struct.pack("!ff", 2.45, freqWidth) #midFreq freqWidth
+        content += struct.pack("!ff", 2.5, freqWidth) #midFreq freqWidth
         channelConn.send(content)
         
     def StopDataChannel(self, channelConn):
